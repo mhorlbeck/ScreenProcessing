@@ -1,0 +1,22 @@
+[CRISPRi_v1]
+filename = CRISPRi_v1.txt
+sublibraries =
+    Apoptosis+Cancer+Other_Cancer
+    Drug_Targets+Kinase_Phosphatase
+    Gene_Expression
+    Membrane_Proteins
+    Stress_Proteostasis
+    Trafficking+Mitochondria+Motility
+    Unassigned
+    Essential_CRISPRi
+
+[CRISPRa_v1]
+filename = CRISPRa_v1.txt
+sublibraries =
+    Apoptosis+Cancer+Other_Cancer
+    Drug_Targets+Kinase_Phosphatase
+    Gene_Expression
+    Membrane_Proteins
+    Stress_Proteostasis
+    Trafficking+Mitochondria+Motility
+    Unassigned

@@ -1,0 +1,52 @@
+Logging to python.0.out ...
+----[start: Mon Jan 18 20:08:02 PST 2016 ]------------------------------------
+Starting job python fastqgz_to_counts.py -p 12 --trim_start 1 --trim_end 35 bowtie_indices/CRISPRi_v1_human DEMO/output_folder_full /home/mhorlbeck/home_tmp/mhorlbeck/sequencing_runs/140509_SR50/cholera/Sample_OC35_index10/OC35_index10_TAGCTT_L008_R1_001.fastq.gz /home/mhorlbeck/home_tmp/mhorlbeck/sequencing_runs/140509_SR50/cholera/Sample_OC35_index12/OC35_index12_CTTGTA_L008_R1_001.fastq.gz /home/mhorlbeck/home_tmp/mhorlbeck/sequencing_runs/140509_SR50/cholera/Sample_OC35_index14/OC35_index14_AGTTCC_L008_R1_001.fastq.gz /home/mhorlbeck/home_tmp/mhorlbeck/sequencing_runs/140509_SR50/cholera/Sample_OC35_index1/OC35_index1_ATCACG_L008_R1_001.fastq.gz /home/mhorlbeck/home_tmp/mhorlbeck/sequencing_runs/140509_SR50/cholera/Sample_OC35_index3/OC35_index3_TTAGGC_L008_R1_001.fastq.gz /home/mhorlbeck/home_tmp/mhorlbeck/sequencing_runs/140509_SR50/cholera/Sample_OC35_index6/OC35_index6_GCCAAT_L008_R1_001.fastq.gz...
+Parsing and trimming sequence files...
+DEMO/output_folder_full/trimmed_fastas/OC35_index10_TAGCTT_L008_R1_001_trim.fa:	33450053 reads
+DEMO/output_folder_full/trimmed_fastas/OC35_index12_CTTGTA_L008_R1_001_trim.fa:	36513934 reads
+DEMO/output_folder_full/trimmed_fastas/OC35_index14_AGTTCC_L008_R1_001_trim.fa:	34556020 reads
+DEMO/output_folder_full/trimmed_fastas/OC35_index1_ATCACG_L008_R1_001_trim.fa:	33420630 reads
+DEMO/output_folder_full/trimmed_fastas/OC35_index3_TTAGGC_L008_R1_001_trim.fa:	37135629 reads
+DEMO/output_folder_full/trimmed_fastas/OC35_index6_GCCAAT_L008_R1_001_trim.fa:	35431784 reads
+Done parsing and trimming sequence files
+Mapping all sequencing runs to index: bowtie_indices/CRISPRi_v1_human
+Starting DEMO/output_folder_full/bowtiemaps/OC35_index10_TAGCTT_L008_R1_001_CRISPRi_v1_human.map ...
+# reads processed: 33450053
+# reads with at least one reported alignment: 27318601 (81.67%)
+# reads that failed to align: 6131452 (18.33%)
+Reported 45017835 alignments to 1 output stream(s)
+Starting DEMO/output_folder_full/bowtiemaps/OC35_index12_CTTGTA_L008_R1_001_CRISPRi_v1_human.map ...
+# reads processed: 36513934
+# reads with at least one reported alignment: 29729223 (81.42%)
+# reads that failed to align: 6784711 (18.58%)
+Reported 51860863 alignments to 1 output stream(s)
+Starting DEMO/output_folder_full/bowtiemaps/OC35_index14_AGTTCC_L008_R1_001_CRISPRi_v1_human.map ...
+# reads processed: 34556020
+# reads with at least one reported alignment: 28231126 (81.70%)
+# reads that failed to align: 6324894 (18.30%)
+Reported 46076448 alignments to 1 output stream(s)
+Starting DEMO/output_folder_full/bowtiemaps/OC35_index1_ATCACG_L008_R1_001_CRISPRi_v1_human.map ...
+# reads processed: 33420630
+# reads with at least one reported alignment: 27360011 (81.87%)
+# reads that failed to align: 6060619 (18.13%)
+Reported 45735197 alignments to 1 output stream(s)
+Starting DEMO/output_folder_full/bowtiemaps/OC35_index3_TTAGGC_L008_R1_001_CRISPRi_v1_human.map ...
+# reads processed: 37135629
+# reads with at least one reported alignment: 30304183 (81.60%)
+# reads that failed to align: 6831446 (18.40%)
+Reported 52683811 alignments to 1 output stream(s)
+Starting DEMO/output_folder_full/bowtiemaps/OC35_index6_GCCAAT_L008_R1_001_CRISPRi_v1_human.map ...
+# reads processed: 35431784
+# reads with at least one reported alignment: 28819719 (81.34%)
+# reads that failed to align: 6612065 (18.66%)
+Reported 49618732 alignments to 1 output stream(s)
+Done bowtie mapping
+Counting mapped reads...
+DEMO/output_folder_full/count_files/OC35_index10_TAGCTT_L008_R1_001_CRISPRi_v1_human.counts: 	4.501784e+07 total mappings	1.160882e+06 ambiguous reads
+DEMO/output_folder_full/count_files/OC35_index12_CTTGTA_L008_R1_001_CRISPRi_v1_human.counts: 	5.186086e+07 total mappings	1.274742e+06 ambiguous reads
+DEMO/output_folder_full/count_files/OC35_index14_AGTTCC_L008_R1_001_CRISPRi_v1_human.counts: 	4.607645e+07 total mappings	1.030809e+06 ambiguous reads
+DEMO/output_folder_full/count_files/OC35_index1_ATCACG_L008_R1_001_CRISPRi_v1_human.counts: 	4.573520e+07 total mappings	9.964510e+05 ambiguous reads
+DEMO/output_folder_full/count_files/OC35_index3_TTAGGC_L008_R1_001_CRISPRi_v1_human.counts: 	5.268381e+07 total mappings	1.136886e+06 ambiguous reads
+DEMO/output_folder_full/count_files/OC35_index6_GCCAAT_L008_R1_001_CRISPRi_v1_human.counts: 	4.961873e+07 total mappings	1.098383e+06 ambiguous reads
+Done counting mapped reads
+--------------------------------------[end: Mon Jan 18 20:53:27 PST 2016 ]----
