@@ -83,7 +83,6 @@ In order, the components of this command are:
 * trim_start 1 = we trim off the first base of the sequencing read, because in this case first base of all of the reads were Gs and this "monotemplating" lowered the sequencing quality of the base
 * trim_end 35 = we trim the read on the 3' end to the 35th base (as measured from the 5' end)
 
-    
     Parsing and trimming sequence files...
     output_folder/trimmed_fastas/OC35_index10_TAGCTT_L008_R1_001_trim.fa:	100 reads
     output_folder/trimmed_fastas/OC35_index12_CTTGTA_L008_R1_001_trim.fa:	100 reads
