@@ -724,7 +724,8 @@ def parseSgId(sgId):
     return parseDict
     
 def rasteredScatter(series1,series2,label1,label2,outfilename):
-    print outfilename
+    # print outfilename
+    pass
 
 def generateHistogram(series, label, outfilename):
     pass
