@@ -167,7 +167,7 @@ acceptedFileTypes = [('*.fastq.gz',fastqGzToTrimmedFasta),
 					('*.fna', fastaToTrimmedFasta)]
 
 
-testLines = 100
+testLines = 10000
 
 
 if __name__ == '__main__':
