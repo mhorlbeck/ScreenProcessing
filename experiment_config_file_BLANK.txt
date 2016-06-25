@@ -121,7 +121,11 @@ collapse_to_transcripts = True
 
 ###Generates a distribution of negative control genes by randomly sampling
 #perform same metric calculations on this set
-generate_pseudogene_dist = True
+#options are:
+#auto (match the pseudogenes with the targeting library table)
+#manual (Specify pseudogenes with the below settings)
+#off
+generate_pseudogene_dist = auto
 
 #sgRNAs/gene for your library
 pseudogene_size = 10

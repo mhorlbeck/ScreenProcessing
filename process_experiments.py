@@ -11,6 +11,7 @@ import scipy as sp
 import fnmatch
 import scipy.stats.mstats as ms
 import matplotlib.pyplot as plt
+import argparse
 
 from expt_config_parser import parseExptConfig, parseLibraryConfig
 
@@ -92,7 +93,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
 
     growthValueDict = {(tup[0],tup[1]):tup[2] for tup in exptParameters['growth_value_tuples']}
     phenotypeList = list(set(zip(*exptParameters['condition_tuples'])[0]))
-    replicateList = list(set(zip(*exptParameters['counts_file_list'])[1]))
+    replicateList = sorted(list(set(zip(*exptParameters['counts_file_list'])[1])))
 
     phenotypeScoreDict = dict()
     for (phenotype, condition1, condition2) in exptParameters['condition_tuples']:
@@ -131,7 +132,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
     #generate pseudogenes
     negTable = phenotypeTable.loc[libraryTable[sublibColumn].loc[:,'gene'] == 'negative_control',:]
 
-    if exptParameters['generate_pseudogene_dist'] == True and len(exptParameters['analyses']) > 0:
+    if exptParameters['generate_pseudogene_dist'] != 'off' and len(exptParameters['analyses']) > 0:
         print 'Generating a pseudogene distribution from negative controls'
         sys.stdout.flush()
 
@@ -139,23 +140,44 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
         pseudoLibTables = []
         negValues = negTable.values
         negColumns = negTable.columns
-        for pseudogene in range(exptParameters['num_pseudogenes']):
-            randIndices = np.random.randint(0, len(negTable), exptParameters['pseudogene_size'])
-            pseudoTable = negValues[randIndices,:]
-            pseudoIndex = ['pseudo_%d_%d' % (pseudogene,i) for i in range(exptParameters['pseudogene_size'])]
-            pseudoSeqs = ['seq_%d_%d' % (pseudogene,i) for i in range(exptParameters['pseudogene_size'])] #so pseudogenes aren't treated as duplicates
-            pseudoTableList.append(pd.DataFrame(pseudoTable,index=pseudoIndex,columns=negColumns))
-            pseudoLib = pd.DataFrame({'gene':['pseudo_%d'%pseudogene]*exptParameters['pseudogene_size'],
-                'transcripts':['na']*exptParameters['pseudogene_size'],
-                'sequence':pseudoSeqs},index=pseudoIndex)
-            pseudoLibTables.append(pseudoLib)
+
+        if exptParameters['generate_pseudogene_dist'].lower() == 'manual':
+            for pseudogene in range(exptParameters['num_pseudogenes']):
+                randIndices = np.random.randint(0, len(negTable), exptParameters['pseudogene_size'])
+                pseudoTable = negValues[randIndices,:]
+                pseudoIndex = ['pseudo_%d_%d' % (pseudogene,i) for i in range(exptParameters['pseudogene_size'])]
+                pseudoSeqs = ['seq_%d_%d' % (pseudogene,i) for i in range(exptParameters['pseudogene_size'])] #so pseudogenes aren't treated as duplicates
+                pseudoTableList.append(pd.DataFrame(pseudoTable,index=pseudoIndex,columns=negColumns))
+                pseudoLib = pd.DataFrame({'gene':['pseudo_%d'%pseudogene]*exptParameters['pseudogene_size'],
+                    'transcripts':['na']*exptParameters['pseudogene_size'],
+                    'sequence':pseudoSeqs},index=pseudoIndex)
+                pseudoLibTables.append(pseudoLib)
+
+        elif exptParameters['generate_pseudogene_dist'].lower() == 'auto':
+            for pseudogene, (gene, group) in enumerate(libraryTable[sublibColumn].groupby('gene')):
+                if gene == 'negative_control':
+                    continue 
+                for transcript, (transcriptName, transcriptGroup) in enumerate(group.groupby('transcripts')):
+                    randIndices = np.random.randint(0, len(negTable), len(transcriptGroup))
+                    pseudoTable = negValues[randIndices,:]
+                    pseudoIndex = ['pseudo_%d_%d_%d' % (pseudogene, transcript, i) for i in range(len(transcriptGroup))]
+                    pseudoSeqs = ['seq_%d_%d_%d' % (pseudogene, transcript, i) for i in range(len(transcriptGroup))]
+                    pseudoTableList.append(pd.DataFrame(pseudoTable,index=pseudoIndex,columns=negColumns))
+                    pseudoLib = pd.DataFrame({'gene':['pseudo_%d'%pseudogene]*len(transcriptGroup),
+                        'transcripts':['pseudo_transcript_%d'%transcript]*len(transcriptGroup),
+                        'sequence':pseudoSeqs},index=pseudoIndex)
+                    pseudoLibTables.append(pseudoLib)
+
+        else:
+            print 'generate_pseudogene_dist parameter not recognized, defaulting to off'
 
         phenotypeTable = phenotypeTable.append(pd.concat(pseudoTableList))
         libraryTableGeneAnalysis = libraryTable[sublibColumn].append(pd.concat(pseudoLibTables))
     else:
         libraryTableGeneAnalysis = libraryTable[sublibColumn]
 
-    #return phenotypeTable, libraryTable
+    # print libraryTableGeneAnalysis
+    # return phenotypeTable, libraryTableGeneAnalysis
 
     #compute gene scores for replicates, averaged reps, and pseudogenes
     if len(exptParameters['analyses']) > 0:
@@ -186,10 +208,6 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
             geneTableCollapsed = scoreGeneByBestTranscript(geneTable)
             geneTableCollapsed.to_csv(outbase + '_genetable_collapsed.txt',sep='\t', tupleize_cols = False)
 
-
-    #generate summary graphs depending on which analyses were selected
-
-
     print 'Done!'
 
 #given a gene table indexed by both gene and transcript, score genes by the best m-w p-value per phenotype/replicate
@@ -211,84 +229,6 @@ def getBestTranscript(group):
     #set the index to be transcripts and then get the index with the lowest p-value for each cell
     return group.set_index('transcripts').drop(('gene',''),axis=1).idxmin() 
 
-#an example processing pipeline, standardized for crispricin screens
-def processCrispricinExperiments(outbase, libraryFastaFileName,experimentFileName, gkFileName, filterThreshold = 25, filterSet = None, normToNegs = True):
-    libraryTable = readLibraryFile(libraryFastaFileName,crisprElementType,crisprGeneName,[crisprGuideLength_v1, crisprGuideSequence_rctrimmed28])
-    print 'Merging counts for each experiment...'
-    rawCounts, allExpts = mergeCountsForExperiments(experimentFileName,libraryTable)
-    print 'Filtering guides by low read counts across all conditions/replicates...\n # guides filtered:'
-    filteredCounts = filterCountsPerExperiment(filterThreshold, allExpts, libraryTable).sort(axis=1)
-    if filterSet != None:
-        filteredCounts = filteredCounts.loc[set(filteredCounts.index.values) - filterSet].align(filteredCounts,axis=0)[0]
-    
-    #table1 = pd.concat([libraryTable, rawCounts, allExpts, filteredCounts], axis=1, keys = ['library_table', 'raw_counts', 'expt_counts', 'filtered_counts'])
-    
-    libraryTable.to_csv(outbase+'_librarytable.txt', sep='\t', tupelize_cols = False)
-    rawCounts.to_csv(outbase+'_rawcounts.txt', sep='\t', tupelize_cols = False)
-    allExpts.sort(axis=1).to_csv(outbase+'_mergedexptcounts.txt', sep='\t', tupelize_cols = False)
-    filteredCounts.to_csv(outbase+'_filteredcounts.txt', sep='\t', tupelize_cols = False)
-    #testReadback = pd.read_csv('testfiles/testtable_countstable.txt',sep='\t', tupleize_cols=False, header=range(3), index_col=0)
-
-    print 'Computing phenotype scores...'
-    gkdict = parseGKFile(gkFileName)
-    gammas, taus, rhos = computeAllPhenotypeScores('t0','cycled','ricin', filteredCounts, libraryTable, gkdict, normToNegs=normToNegs)
-    mergedScores = pd.concat([gammas,taus,rhos], axis=1).sort(axis=1)
-    aveScores = averagePhenotypeScores(mergedScores).sort(axis=1)
-    
-    #table2 = pd.concat([libraryTable, mergedScores,aveScores], axis = 1, keys = ['library_table','replicate_scores', 'averaged_scores'])
-    mergedScores.to_csv(outbase+'_replicatephenotypescores.txt', sep='\t', tupelize_cols = False)
-    aveScores.to_csv(outbase+'_averagedphenotypescores.txt', sep='\t', tupelize_cols = False)
-    #testReadback = pd.read_csv('testfiles/testtable_phenotypescores.txt',sep='\t', tupleize_cols=False, header=range(3), index_col=0)
-
-    print 'Computing gene scores...'
-    geneScores = computeGeneScores(libraryTable, mergedScores, normToNegs=normToNegs).sort(axis=1)
-    aveGeneScores = computeGeneScores(libraryTable, aveScores, normToNegs=normToNegs).sort(axis=1)
-    
-    #table3 = pd.concat([geneScores, aveGeneScores], axis = 1, keys = ['replicate_gene_pvals','averaged_gene_pvals'])
-    geneScores.to_csv(outbase+'_replicategenescores.txt', sep='\t', tupelize_cols = False)
-    aveGeneScores.to_csv(outbase+'_averagedgenescores.txt', sep='\t', tupelize_cols = False)
-    #testReadback = pd.read_csv('testfiles/testtable_genescores.txt',sep='\t', tupleize_cols=False, header=range(4), index_col=0)
-    print 'Done!'
-
-#an example processing pipeline, standardized for crispricin screens
-def processEssentialExperiments(outbase, libraryFastaFileName,experimentFileName, gkFileName, filterThreshold = 25, filterSet = None, normToNegs = True):
-    libraryTable = readLibraryFile(libraryFastaFileName,crisprElementTypeSublibraries,crisprGeneNameSublibraries,[])#[crisprGuideLength_v2, crisprGuideSequence_trimmed35])
-    
-    print 'Merging counts for each experiment...'
-    rawCounts, allExpts = mergeCountsForExperiments(experimentFileName,libraryTable)
-    print 'Filtering guides by low read counts across all conditions/replicates...\n # guides filtered:'
-    filteredCounts = filterCountsPerExperiment(filterThreshold, allExpts, libraryTable).sort(axis=1)
-    if filterSet != None:
-        filteredCounts = filteredCounts.loc[set(filteredCounts.index.values) - filterSet].align(filteredCounts,axis=0)[0]
-    
-    #table1 = pd.concat([libraryTable, rawCounts, allExpts, filteredCounts], axis=1, keys = ['library_table', 'raw_counts', 'expt_counts', 'filtered_counts'])
-    
-    libraryTable.to_csv(outbase+'_librarytable.txt', sep='\t', tupelize_cols = False)
-    rawCounts.to_csv(outbase+'_rawcounts.txt', sep='\t', tupelize_cols = False)
-    allExpts.sort(axis=1).to_csv(outbase+'_mergedexptcounts.txt', sep='\t', tupelize_cols = False)
-    filteredCounts.to_csv(outbase+'_filteredcounts.txt', sep='\t', tupelize_cols = False)
-    #testReadback = pd.read_csv('testfiles/testtable_countstable.txt',sep='\t', tupleize_cols=False, header=range(3), index_col=0)
-
-    print 'Computing phenotype scores...'
-    gkdict = parseGKFile(gkFileName)
-    gammas, taus, rhos = computeAllPhenotypeScores('T0','cycled','rigo', filteredCounts, libraryTable, gkdict, normToNegs=normToNegs)
-    mergedScores = pd.concat([gammas,taus,rhos], axis=1).sort(axis=1)
-    aveScores = averagePhenotypeScores(mergedScores).sort(axis=1)
-    
-    #table2 = pd.concat([libraryTable, mergedScores,aveScores], axis = 1, keys = ['library_table','replicate_scores', 'averaged_scores'])
-    mergedScores.to_csv(outbase+'_replicatephenotypescores.txt', sep='\t', tupelize_cols = False)
-    aveScores.to_csv(outbase+'_averagedphenotypescores.txt', sep='\t', tupelize_cols = False)
-    #testReadback = pd.read_csv('testfiles/testtable_phenotypescores.txt',sep='\t', tupleize_cols=False, header=range(3), index_col=0)
-
-    #print 'Computing gene scores...'
-    #geneScores = computeGeneScores(libraryTable, mergedScores, normToNegs=normToNegs).sort(axis=1)
-    #aveGeneScores = computeGeneScores(libraryTable, aveScores, normToNegs=normToNegs).sort(axis=1)
-    
-    #table3 = pd.concat([geneScores, aveGeneScores], axis = 1, keys = ['replicate_gene_pvals','averaged_gene_pvals'])
-    #geneScores.to_csv(outbase+'_replicategenescores.txt', sep='\t', tupelize_cols = False)
-    #aveGeneScores.to_csv(outbase+'_averagedgenescores.txt', sep='\t', tupelize_cols = False)
-    #testReadback = pd.read_csv('testfiles/testtable_genescores.txt',sep='\t', tupleize_cols=False, header=range(4), index_col=0)
-    print 'Done!'
 
 #return Series of counts from a counts file indexed by element id
 def readCountsFile(countsFileName):
@@ -474,15 +414,16 @@ def computePhenotypeScore(counts1, counts2, libraryTable, growthValue, pseudocou
     totalCounts = combinedCountsPseudo.sum()
     countsRatio = float(totalCounts[0])/totalCounts[1]
 
-    #get neg control log2e--does this need WTlog2E??
+    #compute neg control log2 enrichment
     if normToNegs == True:
         negCounts = combinedCountsPseudo.align(libraryTable[libraryTable['gene'] == 'negative_control'],axis=0,join='inner')[0]
         #print negCounts
     else:
         negCounts = combinedCountsPseudo
-    neglog2e = negCounts.apply(calcLog2e, countsRatio=countsRatio, growthValue=1, wtLog2E=0, axis=1).median() #no growth value used in martin's
+    neglog2e = negCounts.apply(calcLog2e, countsRatio=countsRatio, growthValue=1, wtLog2E=0, axis=1).median()
     #print neglog2e
-    #compute scores
+
+    #compute phenotype scores
     scores = combinedCountsPseudo.apply(calcLog2e, countsRatio=countsRatio, growthValue=growthValue, wtLog2E=neglog2e, axis=1)
 
     return scores
@@ -577,16 +518,18 @@ def applyGeneScoreFunction(groupedPhenotypeTable, negativeTable, analysis, analy
     return result
 
 def averageBestN(column, numToAverage):
-    return np.mean(sorted(column.dropna(),key=abs,reverse=True)[:numToAverage])
+    if len(column.dropna()) == 0:
+        return np.nan
+    else:
+        return np.mean(sorted(column.dropna(),key=abs,reverse=True)[:numToAverage])
 def applyMW(column, negativeTable):
     if column.count() == 0:
         return np.nan
     else:
-        return sp.stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values)[1] * 2 #stats.mannwhitneyu is one-tailed!!
-
-# unneccesary and variable behavior--pandas count() automatic discounts nans
-# def countAfterFilter(column):
-#     return len(column.dropna())
+        if (sp.__version__.split('.')[1]) >= 17: #implementation of the "alternative flag":
+            return sp.stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values, alternative = 'two-sided')[1]
+        else:
+            return sp.stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values)[1] * 2 #pre v0.17 stats.mannwhitneyu is one-tailed!!
 
 
 #parse a tab-delimited file with column headers: experiment, replicate_id, G_value, K_value (calculated with martin's parse_growthdata.py)
@@ -603,125 +546,6 @@ def parseGKFile(gkFileName):
 
     return gkdict
 
-#converter function for crispr element names to element type
-def crisprElementType(libTable):
-    idArray = libTable.index.values
-    typeList = []
-    for elementId in idArray:
-        if elementId[:3] == 'neg':
-            typeList.append('negative_control')
-        elif elementId[:3] == 'mis':
-            typeList.append('mismatch')
-        else:
-            typeList.append('sample')
-
-    return pd.DataFrame(np.array(typeList), index=libTable.index)
-
-#converter function for crispr element names to element type
-def crisprElementTypeSublibraries(libTable):
-    idArray = libTable.index.values
-    typeList = []
-    for elementId in idArray:
-        sgId = parseSgId(elementId)
-        if sgId['gene_name'][:3] == 'neg':
-            typeList.append('negative_control')
-        else:
-            typeList.append(sgId['gene_name'])
-    
-        #sgId = elementId.split('=')[1]
-        #if sgId[:3] == 'neg' or sgId[:4] == 'CTRL':
-        #   typeList.append('negative_control')
-        #elif sgId[:3] == 'mis':
-        #   typeList.append('mismatch')
-        #else:
-        #   typeList.append('sample')
-
-    return pd.DataFrame(np.array(typeList), index=libTable.index)
-
-#converter function for crispr element names to gene name
-def crisprGeneName(libTable):
-    idArray = libTable.index.values
-    nameList = []
-    for elementId in idArray:
-        if elementId[:3] == 'neg':
-            nameList.append('negative_control')
-        else:
-            nameList.append(elementId.split('_')[0])
-
-    return pd.DataFrame(np.array(nameList), index=libTable.index)
-
-#converter function for crispr element names to gene name
-def crisprGeneNameSublibraries(libTable):
-    idArray = libTable.index.values
-    nameList = []
-    for elementId in idArray:
-        sgId = parseSgId(elementId)
-        if sgId['gene_name'][:3] == 'neg':
-            nameList.append('negative_control')
-        else:
-            nameList.append(sgId['gene_name'])
-            
-        #sgId = elementId.split('=')[1]
-        #if sgId[:3] == 'neg':  # or sgId[:4] == 'CTRL':
-        #   nameList.append('negative_control')
-        #else:
-        #   if sgId[:2] == 'sg':
-        #       nameList.append(sgId[2:].split('_')[0])
-        #   else:
-        #       nameList.append(sgId.split('_')[0])
-
-    return pd.DataFrame(np.array(nameList), index=libTable.index)
-
-def parseSgId(sgId):
-    parseDict = dict()
-    
-    #sublibrary
-    if len(sgId.split('=')) == 2:
-        parseDict['Sublibrary'] = sgId.split('=')[0]
-        remainingId = sgId.split('=')[1]
-    else:
-        parseDict['Sublibrary'] = None
-        remainingId = sgId
-        
-    #gene name and strand
-    underscoreSplit = remainingId.split('_')
-    
-    for i,item in enumerate(underscoreSplit):
-        if item == '+':
-            strand = '+'
-            geneName = '_'.join(underscoreSplit[:i])
-            remainingId = '_'.join(underscoreSplit[i+1:])
-            break
-        elif item == '-':
-            strand = '-'
-            geneName = '_'.join(underscoreSplit[:i])
-            remainingId = '_'.join(underscoreSplit[i+1:])
-            break
-        else:
-            continue
-            
-    parseDict['strand'] = strand
-    parseDict['gene_name'] = geneName
-        
-    #position
-    dotSplit = remainingId.split('.')
-    parseDict['position'] = int(dotSplit[0])
-    remainingId = '.'.join(dotSplit[1:])
-    
-    #length incl pam
-    dashSplit = remainingId.split('-')
-    parseDict['length'] = int(dashSplit[0])
-    remainingId = '-'.join(dashSplit[1:])
-    
-    #pass score
-    tildaSplit = remainingId.split('~')
-    parseDict['pass_score'] = tildaSplit[-1]
-    remainingId = '~'.join(tildaSplit[:-1]) #should always be length 1 anyway
-    
-    #transcripts
-    parseDict['transcript_list'] = remainingId.split(',')
-    
-    return parseDict
     
 def rasteredScatter(series1,series2,label1,label2,outfilename):
     # print outfilename
@@ -729,17 +553,14 @@ def rasteredScatter(series1,series2,label1,label2,outfilename):
 
 def generateHistogram(series, label, outfilename):
     pass
-    
-#converter function for crispr element names to guide length
-def crisprGuideLength_v1(libTable):
-    idArray = libTable.index.values
-    return pd.DataFrame(np.array([int(elementId.split('.')[1]) - 3 for elementId in idArray]), index=libTable.index, columns=['guide_length'])
 
-#converter function for rctrimmed28
-def crisprGuideSequence_rctrimmed28(libTable):
-    idArray = libTable.index.values
-    lengthList = [int(elementId.split('.')[1]) - 3 for elementId in idArray]
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Calculate sgRNA- and gene-level phenotypes based on sequencing read counts, as specified by the experiment config file.')
+    parser.add_argument('Config_File', help='Experiment config file specifying screen analysis settings (see accomapnying BLANK and DEMO files).')
+    parser.add_argument('Library_File_Directory', help='Directory containing reference library tables and the library_config.txt file.')
 
-    return pd.DataFrame(np.array([Seq.Seq(alignedSeq[:lengthList[i]]).reverse_complement().tostring() for i, alignedSeq in enumerate(libTable['aligned_seq'])]), index=libTable.index, columns=['guide_seq'])
+    args = parser.parse_args()
+    # print args
 
+    processExperimentsFromConfig(args.Config_File, args.Library_File_Directory)
 

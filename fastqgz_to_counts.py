@@ -17,21 +17,6 @@ from Bio import SeqIO
 ### Sequence File to Trimmed Fasta Functions ###
 
 def parallelSeqFileToTrimmedFasta(fastqGzFileNameList, fastaFileNameList, outbase, processPool, startIndex=None, stopIndex=None, test=False):
-	"""Function Description
-
-	Parameters
-	----------
-
-
-	Returns
-	-------
-
-
-	Raises
-	------
-
-
-	"""
 
 	if len(fastqGzFileNameList) != len(fastaFileNameList):
 		raise ValueError('In and out file lists must be the same length')

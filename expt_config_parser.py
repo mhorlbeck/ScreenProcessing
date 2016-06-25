@@ -274,16 +274,16 @@ def parseExptConfig(configFile, librariesToSublibrariesDict):
 
     #pseudogene parameters
     if parser.has_option('gene_analysis','generate_pseudogene_dist'):
-        try:
-            paramDict['generate_pseudogene_dist'] = parser.getboolean('gene_analysis','generate_pseudogene_dist')
-        except ValueError:
-            warningString += 'Generate pseudogene dist entry not a recognized boolean value\n'
+        paramDict['generate_pseudogene_dist'] = parser.get('gene_analysis','generate_pseudogene_dist').lower()
+
+        if paramDict['generate_pseudogene_dist'] not in ['auto','manual','off']:
+            warningString += 'Generate pseudogene dist entry not a recognized option\n'
             exitStatus += 1
     else:
         paramDict['generate_pseudogene_dist'] = False
         warningString += 'Generate pseudogene dist defaulting to False\n'
 
-    if 'generate_pseudogene_dist' in paramDict and paramDict['generate_pseudogene_dist'] == True:
+    if 'generate_pseudogene_dist' in paramDict and paramDict['generate_pseudogene_dist'] == 'manual':
         if parser.has_option('gene_analysis','pseudogene_size'):
             try:
                 paramDict['pseudogene_size'] = parser.getint('gene_analysis','pseudogene_size')
