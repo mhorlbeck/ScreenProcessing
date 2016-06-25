@@ -83,7 +83,11 @@ In order, the components of this command are:
 * trim_start 1 = we trim off the first base of the sequencing read, because in this case first base of all of the reads were Gs and this "monotemplating" lowered the sequencing quality of the base
 * trim_end 35 = we trim the read on the 3' end to the 35th base (as measured from the 5' end)
 
+<<<<<<< HEAD
 
+=======
+```
+>>>>>>> 7c33a7a9ae2f08bfb0e9cc1148905904f1c76fc0
     Parsing and trimming sequence files...
     DEMO/output_folder_test/trimmed_fastas/OC35_index10_TAGCTT_L008_R1_001_trim.fa: 10000 reads
     DEMO/output_folder_test/trimmed_fastas/OC35_index12_CTTGTA_L008_R1_001_trim.fa: 10000 reads
@@ -132,6 +136,7 @@ In order, the components of this command are:
     DEMO/output_folder_test/count_files/OC35_index3_TTAGGC_L008_R1_001_CRISPRi_v1_human.counts:     8.539000e+03 total mappings 3.120000e+02 ambiguous reads
     DEMO/output_folder_test/count_files/OC35_index6_GCCAAT_L008_R1_001_CRISPRi_v1_human.counts:     8.496000e+03 total mappings 2.930000e+02 ambiguous reads
     Done counting mapped reads
+```
 
 The script ran successfully! The typical alignment rates we see for this step are in the 80-90% range, although if you just look at the first 10,000 reads (as we did using the --test flag) the percent aligning can be lower than this. 
 Here's the output of the full run, as specified by just removing the --test flag:
