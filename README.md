@@ -67,7 +67,7 @@ and see the usage information for running the script:
       -p PROCESSORS, --processors PROCESSORS
       --trim_start TRIM_START
       --trim_end TRIM_END
-      --test                Run the entire script on only the first 100 reads of
+      --test                Run the entire script on only the first 10000 reads of
                             each file. Be sure to delete or move all test files
                             before re-running script as they will not be
                             overwritten.
@@ -83,56 +83,57 @@ In order, the components of this command are:
 * trim_start 1 = we trim off the first base of the sequencing read, because in this case first base of all of the reads were Gs and this "monotemplating" lowered the sequencing quality of the base
 * trim_end 35 = we trim the read on the 3' end to the 35th base (as measured from the 5' end)
 
+
     Parsing and trimming sequence files...
-    output_folder/trimmed_fastas/OC35_index10_TAGCTT_L008_R1_001_trim.fa:	100 reads
-    output_folder/trimmed_fastas/OC35_index12_CTTGTA_L008_R1_001_trim.fa:	100 reads
-    output_folder/trimmed_fastas/OC35_index14_AGTTCC_L008_R1_001_trim.fa:	100 reads
-    output_folder/trimmed_fastas/OC35_index1_ATCACG_L008_R1_001_trim.fa:	100 reads
-    output_folder/trimmed_fastas/OC35_index3_TTAGGC_L008_R1_001_trim.fa:	100 reads
-    output_folder/trimmed_fastas/OC35_index6_GCCAAT_L008_R1_001_trim.fa:	100 reads
+    DEMO/output_folder_test/trimmed_fastas/OC35_index10_TAGCTT_L008_R1_001_trim.fa: 10000 reads
+    DEMO/output_folder_test/trimmed_fastas/OC35_index12_CTTGTA_L008_R1_001_trim.fa: 10000 reads
+    DEMO/output_folder_test/trimmed_fastas/OC35_index14_AGTTCC_L008_R1_001_trim.fa: 10000 reads
+    DEMO/output_folder_test/trimmed_fastas/OC35_index1_ATCACG_L008_R1_001_trim.fa:  10000 reads
+    DEMO/output_folder_test/trimmed_fastas/OC35_index3_TTAGGC_L008_R1_001_trim.fa:  10000 reads
+    DEMO/output_folder_test/trimmed_fastas/OC35_index6_GCCAAT_L008_R1_001_trim.fa:  10000 reads
     Done parsing and trimming sequence files
     Mapping all sequencing runs to index: bowtie_indices/CRISPRi_v1_human
-    Starting output_folder/bowtiemaps/OC35_index10_TAGCTT_L008_R1_001_CRISPRi_v1_human.map ...
-    # reads processed: 100
-    # reads with at least one reported alignment: 83 (83.00%)
-    # reads that failed to align: 17 (17.00%)
-    Reported 86 alignments to 1 output stream(s)
-    Starting output_folder/bowtiemaps/OC35_index12_CTTGTA_L008_R1_001_CRISPRi_v1_human.map ...
-    # reads processed: 100
-    # reads with at least one reported alignment: 78 (78.00%)
-    # reads that failed to align: 22 (22.00%)
-    Reported 80 alignments to 1 output stream(s)
-    Starting output_folder/bowtiemaps/OC35_index14_AGTTCC_L008_R1_001_CRISPRi_v1_human.map ...
-    # reads processed: 100
-    # reads with at least one reported alignment: 75 (75.00%)
-    # reads that failed to align: 25 (25.00%)
-    Reported 76 alignments to 1 output stream(s)
-    Starting output_folder/bowtiemaps/OC35_index1_ATCACG_L008_R1_001_CRISPRi_v1_human.map ...
-    # reads processed: 100
-    # reads with at least one reported alignment: 84 (84.00%)
-    # reads that failed to align: 16 (16.00%)
-    Reported 84 alignments to 1 output stream(s)
-    Starting output_folder/bowtiemaps/OC35_index3_TTAGGC_L008_R1_001_CRISPRi_v1_human.map ...
-    # reads processed: 100
-    # reads with at least one reported alignment: 73 (73.00%)
-    # reads that failed to align: 27 (27.00%)
-    Reported 75 alignments to 1 output stream(s)
-    Starting output_folder/bowtiemaps/OC35_index6_GCCAAT_L008_R1_001_CRISPRi_v1_human.map ...
-    # reads processed: 100
-    # reads with at least one reported alignment: 74 (74.00%)
-    # reads that failed to align: 26 (26.00%)
-    Reported 77 alignments to 1 output stream(s)
+    Starting DEMO/output_folder_test/bowtiemaps/OC35_index10_TAGCTT_L008_R1_001_CRISPRi_v1_human.map ...
+    # reads processed: 10000
+    # reads with at least one reported alignment: 8215 (82.15%)
+    # reads that failed to align: 1785 (17.85%)
+    Reported 8546 alignments to 1 output stream(s)
+    Starting DEMO/output_folder_test/bowtiemaps/OC35_index12_CTTGTA_L008_R1_001_CRISPRi_v1_human.map ...
+    # reads processed: 10000
+    # reads with at least one reported alignment: 8182 (81.82%)
+    # reads that failed to align: 1818 (18.18%)
+    Reported 8727 alignments to 1 output stream(s)
+    Starting DEMO/output_folder_test/bowtiemaps/OC35_index14_AGTTCC_L008_R1_001_CRISPRi_v1_human.map ...
+    # reads processed: 10000
+    # reads with at least one reported alignment: 8182 (81.82%)
+    # reads that failed to align: 1818 (18.18%)
+    Reported 22713 alignments to 1 output stream(s)
+    Starting DEMO/output_folder_test/bowtiemaps/OC35_index1_ATCACG_L008_R1_001_CRISPRi_v1_human.map ...
+    # reads processed: 10000
+    # reads with at least one reported alignment: 8320 (83.20%)
+    # reads that failed to align: 1680 (16.80%)
+    Reported 8626 alignments to 1 output stream(s)
+    Starting DEMO/output_folder_test/bowtiemaps/OC35_index3_TTAGGC_L008_R1_001_CRISPRi_v1_human.map ...
+    # reads processed: 10000
+    # reads with at least one reported alignment: 8164 (81.64%)
+    # reads that failed to align: 1836 (18.36%)
+    Reported 8539 alignments to 1 output stream(s)
+    Starting DEMO/output_folder_test/bowtiemaps/OC35_index6_GCCAAT_L008_R1_001_CRISPRi_v1_human.map ...
+    # reads processed: 10000
+    # reads with at least one reported alignment: 8183 (81.83%)
+    # reads that failed to align: 1817 (18.17%)
+    Reported 8496 alignments to 1 output stream(s)
     Done bowtie mapping
     Counting mapped reads...
-    output_folder/count_files/OC35_index10_TAGCTT_L008_R1_001_CRISPRi_v1_human.counts: 	8.600000e+01 total mappings	2.000000e+00 ambiguous reads
-    output_folder/count_files/OC35_index12_CTTGTA_L008_R1_001_CRISPRi_v1_human.counts: 	8.000000e+01 total mappings	2.000000e+00 ambiguous reads
-    output_folder/count_files/OC35_index14_AGTTCC_L008_R1_001_CRISPRi_v1_human.counts: 	7.600000e+01 total mappings	1.000000e+00 ambiguous reads
-    output_folder/count_files/OC35_index1_ATCACG_L008_R1_001_CRISPRi_v1_human.counts: 	8.400000e+01 total mappings	0.000000e+00 ambiguous reads
-    output_folder/count_files/OC35_index3_TTAGGC_L008_R1_001_CRISPRi_v1_human.counts: 	7.500000e+01 total mappings	2.000000e+00 ambiguous reads
-    output_folder/count_files/OC35_index6_GCCAAT_L008_R1_001_CRISPRi_v1_human.counts: 	7.700000e+01 total mappings	3.000000e+00 ambiguous reads
+    DEMO/output_folder_test/count_files/OC35_index10_TAGCTT_L008_R1_001_CRISPRi_v1_human.counts:    8.546000e+03 total mappings 3.180000e+02 ambiguous reads
+    DEMO/output_folder_test/count_files/OC35_index12_CTTGTA_L008_R1_001_CRISPRi_v1_human.counts:    8.727000e+03 total mappings 3.640000e+02 ambiguous reads
+    DEMO/output_folder_test/count_files/OC35_index14_AGTTCC_L008_R1_001_CRISPRi_v1_human.counts:    2.271300e+04 total mappings 2.900000e+02 ambiguous reads
+    DEMO/output_folder_test/count_files/OC35_index1_ATCACG_L008_R1_001_CRISPRi_v1_human.counts:     8.626000e+03 total mappings 2.710000e+02 ambiguous reads
+    DEMO/output_folder_test/count_files/OC35_index3_TTAGGC_L008_R1_001_CRISPRi_v1_human.counts:     8.539000e+03 total mappings 3.120000e+02 ambiguous reads
+    DEMO/output_folder_test/count_files/OC35_index6_GCCAAT_L008_R1_001_CRISPRi_v1_human.counts:     8.496000e+03 total mappings 2.930000e+02 ambiguous reads
     Done counting mapped reads
 
-The script ran successfully! The typical alignment rates we see for this step are in the 80-90% range, although if you just look at the first 100 reads (as we did using the --test flag) the percent aligning is often much lower. 
+The script ran successfully! The typical alignment rates we see for this step are in the 80-90% range, although if you just look at the first 10,000 reads (as we did using the --test flag) the percent aligning can be lower than this. 
 Here's the output of the full run, as specified by just removing the --test flag:
     python fastqgz_to_counts.py -p 12 --trim_start 1 --trim_end 35 bowtie_indices/CRISPRi_v1_human DEMO/output_folder_full sequencing_runs/140509_SR50/cholera/Sample_OC35_index*/*.fastq.gz
 
@@ -192,13 +193,9 @@ The trimmed_fastas and bowtie_maps files are quite large, and once the script is
 
 This step turns the raw sgRNA counts into quantitative phenotypes for each sgRNA and gene in the experiment. Much of the analysis pipeline is drawn directly from the framework of Bassik and Kampmann et al Cell 2014 and Kampmann, Bassik, and Weissman PNAS 2014. 
 
-To tell the script which sequencing files to use, you first need to fill out an experiment_config_file. A blank version is included with the scripts, along with a filled out example for the cholera toxin screens. Once this is filled out, run the script using an interactive python interpreter (a command line function is in progress). I strongly recommend the iPython Notebook (aka jupyter), which I also used to write this demo.
+To tell the script which sequencing files to use, you first need to fill out an experiment_config_file. A blank version is included with the scripts, along with a filled out example for the cholera toxin screens. Once this is filled out, run the script on the command line. The command line function is:
 
-
-    %run ScreenProcessing/process_experiments.py #load the script into the interpreter
-    #run the command to process experiments, giving the path the the config file you wrote and the directory where the reference tables are kept
-    processExperimentsFromConfig('ScreenProcessing/experiment_config_file_DEMO.txt','ScreenProcessing/library_tables/')
-
+    python ScreenProcessing/process_experiments.py ScreenProcessing/experiment_config_file_DEMO.txt ScreenProcessing/library_tables/
     
     Accessing library information
     Loading counts data
@@ -213,12 +210,7 @@ To tell the script which sequencing files to use, you first need to fill out an 
     Collapsing transcript scores to gene scores
     Done!
 
-
-    /usr/local/lib/python2.7/dist-packages/numpy/core/_methods.py:59: RuntimeWarning: Mean of empty slice.
-      warnings.warn("Mean of empty slice.", RuntimeWarning)
-
-
-The results are a set of tables, which can be opened in excel, or further analyzed using python or R. The tables represent:
+The results are a set of tables, which can be opened in excel, or further analyzed using python or R. For interactive analysis, I strongly recommend the iPython Notebook (aka jupyter), which I also used to write this demo. The tables represent:
 * the librarytable is the info for the sgRNAs
 * the rawcountstable is simply the counts for each sgRNA from each sequencing file, while mergedcountsfile represents the counts after combining any experiments that may have been sequenced in multiple runs
 * the phenotypetable is individual sgRNA phenotypes for replicates and averaged reps (gamma = growth, rho = toxin)
