@@ -154,7 +154,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
                 pseudoLibTables.append(pseudoLib)
 
         elif exptParameters['generate_pseudogene_dist'].lower() == 'auto':
-            for pseudogene, (gene, group) in enumerate(libraryTable[sublibColumn].groupby('gene')):
+            for pseudogene, (gene, group) in enumerate(libraryTable[sublibColumn].drop_duplicates(['gene','sequence']).groupby('gene')):
                 if gene == 'negative_control':
                     continue 
                 for transcript, (transcriptName, transcriptGroup) in enumerate(group.groupby('transcripts')):
