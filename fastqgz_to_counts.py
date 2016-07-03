@@ -1,10 +1,7 @@
 # pipeline to generate read counts and phenotype scores directly from gzipped sequencing data
 
-#FEATURE to add: sequential unmapped read alignment
-
 import os
 import sys
-import subprocess
 import gzip
 import multiprocessing
 import fnmatch
@@ -13,23 +10,23 @@ import csv
 import argparse
 from Bio import SeqIO
 
-
 ### Sequence File to Trimmed Fasta Functions ###
 
-def parallelSeqFileToTrimmedFasta(fastqGzFileNameList, fastaFileNameList, outbase, processPool, startIndex=None, stopIndex=None, test=False):
+def parallelSeqFileToCountsParallel(fastqGzFileNameList, fastaFileNameList, countFileNameList, processPool, libraryFasta, startIndex=None, stopIndex=None, test=False):
 
 	if len(fastqGzFileNameList) != len(fastaFileNameList):
 		raise ValueError('In and out file lists must be the same length')
 
-	arglist = zip(fastqGzFileNameList, fastaFileNameList, [startIndex]*len(fastaFileNameList),[stopIndex]*len(fastaFileNameList), [test]*len(fastaFileNameList))
-	#print arglist
-
-	readsPerFile = processPool.map(seqFileToTrimmedFastaWrapper, arglist)
+	arglist = zip(fastqGzFileNameList, fastaFileNameList, countFileNameList, [libraryFasta]*len(fastaFileNameList), 
+                  [startIndex]*len(fastaFileNameList),[stopIndex]*len(fastaFileNameList), [test]*len(fastaFileNameList)) #[seqToIdDict]*len(fastaFileNameList), [idsToReadcountDict.copy() for i in range(len(fastaFileNameList))]
+# 	print len(arglist), len(arglist[0]), len(fastqGzFileNameList)
+	
+	readsPerFile = processPool.map(seqFileToCountsWrapper, arglist)
 
 	return zip(fastaFileNameList,readsPerFile)
 
 
-def seqFileToTrimmedFastaWrapper(arg):
+def seqFileToCountsWrapper(arg):
 	
 	trimmingFuction = None
 
@@ -42,96 +39,86 @@ def seqFileToTrimmedFastaWrapper(arg):
 
 	return trimmingFuction(*arg)
 
-def fastqGzToTrimmedFasta(fastqGzFileName, fastaFileName, startIndex=None, stopIndex=None, test=False):
+def fastqGzToTrimmedFasta(fastqGzFileName, fastaFileName, countFileName, libraryFasta, startIndex=None, stopIndex=None, test=False):
+	printNow('Processing %s' % fastqGzFileName)
 	with gzip.open(fastqGzFileName) as filehandle:
-		#fastq file subtype shouldn't matter since quality scores are discarded
-		numReads = seqFileToTrimmedFasta_filehandle(filehandle,fastaFileName,'fastq',startIndex,stopIndex,test)
+		numReads = fastqToCounts(filehandle,fastaFileName,countFileName, libraryFasta, startIndex,stopIndex,test)
 
 	return numReads
 
-def fastqToTrimmedFasta(fastqFileName, fastaFileName, startIndex=None, stopIndex=None, test=False):
+def fastqToTrimmedFasta(fastqFileName, fastaFileName, countFileName, libraryFasta, startIndex=None, stopIndex=None, test=False):
+	printNow('Processing %s' % fastqFileName)
 	with open(fastqFileName) as filehandle:
-		numReads = seqFileToTrimmedFasta_filehandle(filehandle,fastaFileName,'fastq',startIndex,stopIndex,test)
+		numReads = fastqToCounts(filehandle,fastaFileName,countFileName, libraryFasta,startIndex,stopIndex,test)
 
 	return numReads
 
-def fastaToTrimmedFasta(inFastaName, outFastaName, startIndex=None, stopIndex=None, test=False):
+def fastaToTrimmedFasta(inFastaName, outFastaName, countFileName, libraryFasta, startIndex=None, stopIndex=None, test=False):
+	printNow('Processing %s' % inFastaName)
 	with open(inFastaName) as filehandle:
-		numReads = seqFileToTrimmedFasta_filehandle(filehandle, outFastaName,'fasta',startIndex,stopIndex,test)
+		numReads = fastaToCounts(filehandle, outFastaName,countFileName, libraryFasta,startIndex,stopIndex,test)
 
 	return numReads
 
-def seqFileToTrimmedFasta_filehandle(infile, fastaFileName, seqFileType, startIndex=None, stopIndex=None, test=False):
+def fastqToCounts(infile, fastaFileName, countFileName, libraryFasta, startIndex=None, stopIndex=None, test=False):
+	seqToIdDict, idsToReadcountDict, expectedReadLength = parseLibraryFasta(libraryFasta)
+	
 	curRead = 0
-	with open(fastaFileName,'w') as outfile:
-		for seq_record in SeqIO.parse(infile,seqFileType):
-			outfile.write('>' + seq_record.id + '\n' + str(seq_record.seq)[startIndex:stopIndex] + '\n')
-			curRead += 1
 
-			#allow test runs using only the first 100 reads from the fastq file
-			if test and curRead >= testLines:
-				break
+	with open(fastaFileName,'w') as unalignedFile:
+		for i, fastqLine in enumerate(infile):
+			if i % 4 != 1:
+				continue
+
+			else:
+				seq = fastqLine.strip()[startIndex:stopIndex]
+			
+				if i == 1 and len(seq) != expectedReadLength:
+					raise ValueError('Trimmed read length does not match expected reference read length')
+			
+				if seq in seqToIdDict:
+					for seqId in seqToIdDict[seq]:
+						idsToReadcountDict[seqId] += 1
+			
+				else:
+					unalignedFile.write('>%d\n%s\n' % (i, seq))
+
+				curRead += 1
+		
+				#allow test runs using only the first N reads from the fastq file
+				if test and curRead >= testLines:
+					break
+
+	with open(countFileName,'w') as countFile:
+		for countTup in (sorted(zip(idsToReadcountDict.keys(), idsToReadcountDict.values()))):
+			countFile.write('%s\t%d\n' % countTup)
 
 	return curRead
-
-### Bowtie mapping trimmed fasta files ###
-
-def prepFileListsForBowtie(basePath, outfileBaseList, bowtieIndex):
-	bowtieMapPath = os.path.join(basePath,'bowtiemaps')
-	bowtieUnmapPath = os.path.join(bowtieMapPath,'bowtieUnmapped')
-	makeDirectory(bowtieUnmapPath)
-
-	bowtieBaseList = [outfileName + '_' + os.path.split(bowtieIndex)[-1] for outfileName in outfileBaseList]
-	bowtieMapPathList = [os.path.join(bowtieMapPath,bowtieMapName) + '.map' for bowtieMapName in bowtieBaseList]
-	bowtieUnmapPathList = [os.path.join(bowtieUnmapPath,bowtieMapName) + '.unmap.fa' for bowtieMapName in bowtieBaseList]
-	
-	alreadyProcessedMapsList = [os.path.join(bowtieMapPath, fileName) for fileName in os.listdir(bowtieMapPath)]
-
-	return bowtieMapPath, bowtieUnmapPath, bowtieBaseList, bowtieMapPathList, bowtieUnmapPathList, alreadyProcessedMapsList
-
-def mapTrimmedFastasToLibrary(fastaFilePathList, bowtieMapPathList, bowtieUnmapPathList, bowtieIndex, numProcessors, mapFilesToSkip=None):
-	numProcessors = max(numProcessors,1)
-
-	for fastaFile, mapFile, unmapFile in zip(fastaFilePathList, bowtieMapPathList, bowtieUnmapPathList):
-		if mapFilesToSkip == None or mapFile not in mapFilesToSkip:
-			printNow('Starting ' + mapFile + ' ...')
-			subprocess.call('bowtie -v 0 -a -p ' + repr(numProcessors) + ' --norc ' + bowtieIndex + ' --suppress 2,4,5,6,7,8 -f ' + fastaFile + ' ' + mapFile + ' --un ' + unmapFile, shell=True)
 
 
 ### Map File to Counts File Functions ###
 
-#adapted from Martin's align_primary.py
-def countReadsInMapFile(mapFileName, countsFileName, ambigFileName):
-	mapCounts = dict()
-	ambigReads = set()
-	with open(mapFileName) as infile:
-		infilereader = csv.reader(infile, delimiter='\t')
-		prevRead = ''
-		for line in infilereader:
-			readId, mapId = line
-			
-			if mapId not in mapCounts:
-				mapCounts[mapId] = 0
+def parseLibraryFasta(libraryFasta):
+	seqToIds, idsToReadcounts, readLengths = dict(), dict(), []
 
-			mapCounts[mapId] += 1
+	with open(libraryFasta) as infile:
+		for seqrecord in SeqIO.parse(infile,'fasta'):
+			seq = str(seqrecord.seq)
+			id = seqrecord.id
 
-			if readId == prevRead:
-				ambigReads.add(readId)
-			prevRead = readId
+			if seq not in seqToIds:
+				seqToIds[seq] = []
+			seqToIds[seq].append(id)
 
-	with open(countsFileName,'w') as outfile:
-		outfilewriter = csv.writer(outfile, delimiter = '\t')
-		for mapId in sorted(mapCounts.keys()):
-			outfilewriter.writerow([mapId, mapCounts[mapId]])
+			idsToReadcounts[id] = 0
 
-	with open(ambigFileName,'w') as outfile:
-		for read in sorted(list(ambigReads)):
-			outfile.write(read + '\n')
+			readLengths.append(len(seq))
 
-	return countsFileName, sum(mapCounts.values()), len(ambigReads)
+	if max(readLengths) != min(readLengths):
+		print min(readLengths), max(readLengths)
+		raise ValueError('Library reference sequences are of inconsistent lengths')
 
-def countReadsInMapFileWrapper(args):
-	return countReadsInMapFile(*args)
+	return seqToIds, idsToReadcounts, readLengths[0]
 
 
 ### Utility Functions ###
@@ -172,8 +159,8 @@ testLines = 10000
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Process raw sequencing data from screens to counts files in parallel')
-	parser.add_argument('Bowtie_Index', help='Bowtie index root name (without .1.ebwt).')
-	parser.add_argument('Out_File_Path')
+	parser.add_argument('Library_Fasta', help='Fasta file of expected library reads.')
+	parser.add_argument('Out_File_Path', help='Directory where output files should be written.')
 	parser.add_argument('Seq_File_Names', nargs='+', help='Name(s) of sequencing file(s). Unix wildcards can be used to select multiple files at once. The script will search for all *.fastq.gz, *.fastq, and *.fa(/fasta/fna) files with the given wildcard name.')
 			
 	parser.add_argument('-u','--Unaligned_Indices', nargs='+', help='Bowtie indices to test unaligned reads for possible cross-contaminations.')
@@ -188,83 +175,39 @@ if __name__ == '__main__':
 	numProcessors = max(args.processors, 1)
 
 	infileList, outfileBaseList = parseSeqFileNames(args.Seq_File_Names)
+
+# 	printNow('Loading reference library...')
+# 	seqToIds, idsToReadcounts, expectedReadLength = parseLibraryFasta(args.Library_Fasta)
 			
 	## unzip and trim all files ##
-	trimmedFastaPath = os.path.join(args.Out_File_Path,'trimmed_fastas')
+	trimmedFastaPath = os.path.join(args.Out_File_Path,'unaligned_reads')
 	makeDirectory(trimmedFastaPath)
+	countFilePath = os.path.join(args.Out_File_Path,'count_files')
+	makeDirectory(countFilePath)
 
-	fastaFileNameList = [outfileName + '_trim.fa' for outfileName in outfileBaseList] #now that fasta files are allowed, add _trim to avoid clash if seq file path and out path are same
+	fastaFileNameList = [outfileName + '_unaligned.fa' for outfileName in outfileBaseList] 
 	fastaFilePathList = [os.path.join(trimmedFastaPath, fastaFileName) for fastaFileName in fastaFileNameList]
-	allFilesToProcess = [fastaFileName for fastaFileName in zip(infileList,fastaFileNameList) if fastaFileName[1] not in os.listdir(trimmedFastaPath)]
-	if len(allFilesToProcess) != 0:
-		infilesToProcess, fastasToProcess = zip(*allFilesToProcess)
-	else:
-		infilesToProcess, fastasToProcess = [],[]
-	fastaFilePathsToProcess = [os.path.join(trimmedFastaPath, fastaFileName) for fastaFileName in fastasToProcess]
+	countFilePathList = [os.path.join(countFilePath,outfileName + '_' + os.path.split(args.Library_Fasta)[-1] + '.counts') for outfileName in outfileBaseList]
+
+#    filesToProcess = [filePaths for filePaths in zip(bowtieMapPathList,countPathList) if os.path.split(filePaths[1])[-1] not in os.listdir(countFilePath)]
+#	if len(allFilesToProcess) != 0:
+#		infilesToProcess, fastasToProcess = zip(*allFilesToProcess)
+#	else:
+#		infilesToProcess, fastasToProcess = [],[]
+#	fastaFilePathsToProcess = [os.path.join(trimmedFastaPath, fastaFileName) for fastaFileName in fastasToProcess]
 
 	
-	if len(fastaFilePathsToProcess) != 0:
+	if len(infileList) != 0:
 		printNow('Parsing and trimming sequence files...')
 		sys.stdout.flush()
 
-		pool = multiprocessing.Pool(min(len(infilesToProcess),numProcessors))
+		pool = multiprocessing.Pool(min(len(infileList),numProcessors))
 
-		resultList = parallelSeqFileToTrimmedFasta(infilesToProcess, fastaFilePathsToProcess,args.Out_File_Path,pool, args.trim_start, args.trim_end, args.test)
+		resultList = parallelSeqFileToCountsParallel(infileList, fastaFilePathList, countFilePathList, pool, args.Library_Fasta, args.trim_start, args.trim_end, args.test)
 		for result in resultList:
 			print result[0] + ':\t' + repr(result[1]) + ' reads'
 		
 		pool.close()
 		pool.join()
-		
-	printNow('Done parsing and trimming sequence files')
 
-	## bowtie map all files ##
-	bowtieIndex = args.Bowtie_Index
-	printNow('Mapping all sequencing runs to index: ' + bowtieIndex)
-
-	bowtieMapPath, bowtieUnmapPath, bowtieBaseList, bowtieMapPathList, bowtieUnmapPathList, alreadyProcessedMapsList = \
-		prepFileListsForBowtie(args.Out_File_Path, outfileBaseList, bowtieIndex)
-	
-	mapTrimmedFastasToLibrary(fastaFilePathList, bowtieMapPathList, bowtieUnmapPathList, bowtieIndex, numProcessors, alreadyProcessedMapsList)
-
-	if args.Unaligned_Indices != None:
-		prevUnmapPath = bowtieUnmapPath
-		prevbowtieUnmapPathList = bowtieUnmapPathList
-		for unalignedIndex in args.Unaligned_Indices:
-			printNow('Mapping remaining unaligned reads to index: ' + bowtieIndex)
-
-			curbowtieMapPath, curbowtieUnmapPath, curbowtieBaseList, curbowtieMapPathList, curbowtieUnmapPathList, curalreadyProcessedMapsList = \
-				prepFileListsForBowtie(prevUnmapPath, [os.path.split(unmapPathName)[-1] for unmapPathName in prevbowtieUnmapPathList], unalignedIndex)
-
-			mapTrimmedFastasToLibrary(prevbowtieUnmapPathList, curbowtieMapPathList, curbowtieUnmapPathList, unalignedIndex, numProcessors, curalreadyProcessedMapsList)
-
-			prevUnmapPath = curbowtieUnmapPath
-			prevbowtieUnmapPathList = curbowtieUnmapPathList
-
-
-	printNow('Done bowtie mapping')
-
-	## count bowtie read mappings ##
-	countFilePath = os.path.join(args.Out_File_Path,'count_files')
-	ambiguousFilePath = os.path.join(countFilePath, 'ambiguous_reads')
-	makeDirectory(ambiguousFilePath)
-
-	countPathList = [os.path.join(countFilePath,bowtieBase + '.counts') for bowtieBase in bowtieBaseList]
-	ambigPathList = [os.path.join(ambiguousFilePath,bowtieBase + '.ambig') for bowtieBase in bowtieBaseList]
-
-	filesToProcess = [filePaths for filePaths in zip(bowtieMapPathList,countPathList,ambigPathList) if os.path.split(filePaths[1])[-1] not in os.listdir(countFilePath)]
-	#printNow(filesToProcess)
-
-	if len(filesToProcess) != 0:
-		printNow('Counting mapped reads...')
-
-		pool = multiprocessing.Pool(min(len(filesToProcess), numProcessors))
-		
-		countResults = pool.map(countReadsInMapFileWrapper, filesToProcess)
-		for result in countResults:
-			printNow('%s: \t%e total mappings\t%e ambiguous reads' % result)
-
-		pool.close()
-		pool.join()
-		
 	printNow('Done counting mapped reads')
