@@ -18,8 +18,7 @@ def parallelSeqFileToCountsParallel(fastqGzFileNameList, fastaFileNameList, coun
 		raise ValueError('In and out file lists must be the same length')
 
 	arglist = zip(fastqGzFileNameList, fastaFileNameList, countFileNameList, [libraryFasta]*len(fastaFileNameList), 
-                  [startIndex]*len(fastaFileNameList),[stopIndex]*len(fastaFileNameList), [test]*len(fastaFileNameList)) #[seqToIdDict]*len(fastaFileNameList), [idsToReadcountDict.copy() for i in range(len(fastaFileNameList))]
-# 	print len(arglist), len(arglist[0]), len(fastqGzFileNameList)
+                  [startIndex]*len(fastaFileNameList),[stopIndex]*len(fastaFileNameList), [test]*len(fastaFileNameList))
 	
 	readsPerFile = processPool.map(seqFileToCountsWrapper, arglist)
 
@@ -100,7 +99,7 @@ def parseLibraryFasta(libraryFasta):
 
 	with open(libraryFasta) as infile:
 		for seqrecord in SeqIO.parse(infile,'fasta'):
-			seq = str(seqrecord.seq)
+			seq = str(seqrecord.seq).upper()
 			id = seqrecord.id
 
 			if seq not in seqToIds:
