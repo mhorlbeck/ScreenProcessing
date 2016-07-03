@@ -160,7 +160,6 @@ if __name__ == '__main__':
 	parser.add_argument('Out_File_Path', help='Directory where output files should be written.')
 	parser.add_argument('Seq_File_Names', nargs='+', help='Name(s) of sequencing file(s). Unix wildcards can be used to select multiple files at once. The script will search for all *.fastq.gz, *.fastq, and *.fa(/fasta/fna) files with the given wildcard name.')
 			
-	parser.add_argument('-u','--Unaligned_Indices', nargs='+', help='Bowtie indices to test unaligned reads for possible cross-contaminations.')
 	parser.add_argument('-p','--processors', type=int, default = 1)
 	parser.add_argument('--trim_start', type=int)
 	parser.add_argument('--trim_end', type=int)

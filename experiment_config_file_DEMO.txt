@@ -53,13 +53,13 @@ library = CRISPRi_v1
 #	/home/max/counts/Sample1_index12_CRISPRi.counts:untreated|Rep1
 
 counts_file_string =
-	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index10_TAGCTT_L008_R1_001_CRISPRi_v1_human.counts:T0|JEV
-	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index14_AGTTCC_L008_R1_001_CRISPRi_v1_human.counts:treated|MH
-	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index1_ATCACG_L008_R1_001_CRISPRi_v1_human.counts:treated|JEV
-	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index12_CTTGTA_L008_R1_001_CRISPRi_v1_human.counts:T0|MH
-	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index3_TTAGGC_L008_R1_001_CRISPRi_v1_human.counts:untreated|JEV
-	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index6_GCCAAT_L008_R1_001_CRISPRi_v1_human.counts:untreated|MH
-
+	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index10_TAGCTT_L008_R1_001_CRISPRi_v1_human.trim_1_35.fa.counts:T0|Rep1
+	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index14_AGTTCC_L008_R1_001_CRISPRi_v1_human.trim_1_35.fa.counts:treated|Rep2
+	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index1_ATCACG_L008_R1_001_CRISPRi_v1_human.trim_1_35.fa.counts:treated|Rep1
+	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index12_CTTGTA_L008_R1_001_CRISPRi_v1_human.trim_1_35.fa.counts:T0|Rep2
+	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index3_TTAGGC_L008_R1_001_CRISPRi_v1_human.trim_1_35.fa.counts:untreated|Rep1
+	ScreenProcessing/DEMO/output_folder_full/count_files/OC35_index6_GCCAAT_L008_R1_001_CRISPRi_v1_human.trim_1_35.fa.counts:untreated|Rep2
+	
 #############################################################
 ##                     Filter Settings                     ##
 #############################################################
@@ -111,12 +111,12 @@ pseudocount = 1
 
 
 growth_value_string =
-	gamma:MH:11.1519761622
-	rho:MH:8.44158496881
-	tau:MH:2.7103911934
-	gamma:JEV:10.7412001484
-	rho:JEV:7.82935376641
-	tau:JEV:2.9118463821
+	gamma:Rep2:11.1519761622
+	rho:Rep2:8.44158496881
+	tau:Rep2:2.7103911934
+	gamma:Rep1:10.7412001484
+	rho:Rep1:7.82935376641
+	tau:Rep1:2.9118463821
 	
 
 

@@ -1,6 +1,6 @@
-T0	JEV	45017835
-T0	MH	51860863
-treated	JEV	45735197
-treated	MH	46076448
-untreated	JEV	52683811
-untreated	MH	49618732
+T0	Rep1	28158534
+T0	Rep2	30653900
+treated	Rep1	28067685
+treated	Rep2	28966269
+untreated	Rep1	31111541
+untreated	Rep2	29603701
