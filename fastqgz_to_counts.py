@@ -23,7 +23,7 @@ def parallelSeqFileToCountsParallel(fastqGzFileNameList, fastaFileNameList, coun
 	
 	readsPerFile = processPool.map(seqFileToCountsWrapper, arglist)
 
-	return zip(fastaFileNameList,readsPerFile)
+	return zip(countFileNameList,readsPerFile)
 
 
 def seqFileToCountsWrapper(arg):
