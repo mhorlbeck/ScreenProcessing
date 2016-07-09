@@ -373,7 +373,9 @@ def parseExptConfig(configFile, librariesToSublibrariesDict):
 #Parse the library configuration file to get the available libraries, sublibraries, and corresponding library table files
 def parseLibraryConfig(libConfigFile):
     parser = SafeConfigParser()
-    parser.read(libConfigFile)
+    result = parser.read(libConfigFile)
+    if len(result) == 0:
+        raise ValueError('Library config file not found')
     
     librariesToSublibraries = dict()
     librariesToTables = dict()
@@ -385,6 +387,6 @@ def parseLibraryConfig(libConfigFile):
         librariesToSublibraries[library.lower()] = [sub.strip().lower() for sub in sublibraryList]
 
     if len(librariesToTables) == 0:
-        raise ValueError('Library config file not found or empty')
+        raise ValueError('Library config file empty')
     
     return librariesToSublibraries, librariesToTables
