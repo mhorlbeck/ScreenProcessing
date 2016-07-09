@@ -394,7 +394,6 @@ def computeAllPhenotypeScores(startCondition, endUntreatedCondition, endTreatedC
     return gammas, taus, rhos
 
 #compute phenotype scores for any given comparison of two conditions
-#edited 11/13/2014, so computeAllPhenotypeScores and example pipelines may require corrections
 def computePhenotypeScore(counts1, counts2, libraryTable, growthValue, pseudocountBehavior, pseudocountValue, normToNegs=True):
     combinedCounts = pd.concat([counts1,counts2],axis = 1)
 
@@ -500,11 +499,11 @@ def applyGeneScoreFunction(groupedPhenotypeTable, negativeTable, analysis, analy
             counts = groupedPhenotypeTable.count()
             result = pd.concat([means,counts],axis=1,keys=['average of all phenotypes','average of all phenotypes_sgRNAcount'])
         else:
-            means = groupedPhenotypeTable.aggregate(lambda x: averageBestN(x, numToAverage))
+            means = groupedPhenotypeTable.apply(lambda x: averageBestN(x, numToAverage))
             counts = groupedPhenotypeTable.count()
             result = pd.concat([means,counts],axis=1,keys=['average phenotype of strongest %d'%numToAverage, 'sgRNA count_avg'])
     elif analysis == 'calculate_mw':
-        pvals = groupedPhenotypeTable.aggregate(lambda x: applyMW(x, negativeTable))
+        pvals = groupedPhenotypeTable.apply(lambda x: applyMW(x, negativeTable))
         counts = groupedPhenotypeTable.count()
         result = pd.concat([pvals,counts],axis=1,keys=['Mann-Whitney p-value','sgRNA count_MW'])
     elif analysis == 'calculate_nth':
@@ -517,19 +516,14 @@ def applyGeneScoreFunction(groupedPhenotypeTable, negativeTable, analysis, analy
 
     return result
 
-def averageBestN(column, numToAverage):
-    if len(column.dropna()) == 0:
-        return np.nan
+def averageBestN(group, numToAverage):
+    return group.apply(lambda column: np.mean(sorted(column.dropna(),key=abs,reverse=True)[:numToAverage]) if len(column.dropna()) > 0 else np.nan)
+
+def applyMW(group, negativeTable):
+    if int(sp.__version__.split('.')[1]) >= 17: #implementation of the "alternative flag":
+        return group.apply(lambda column: sp.stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values, alternative = 'two-sided')[1] if len(column.dropna()) > 0 else np.nan)
     else:
-        return np.mean(sorted(column.dropna(),key=abs,reverse=True)[:numToAverage])
-def applyMW(column, negativeTable):
-    if column.count() == 0:
-        return np.nan
-    else:
-        if (sp.__version__.split('.')[1]) >= 17: #implementation of the "alternative flag":
-            return sp.stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values, alternative = 'two-sided')[1]
-        else:
-            return sp.stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values)[1] * 2 #pre v0.17 stats.mannwhitneyu is one-tailed!!
+        return group.apply(lambda column: sp.stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values)[1] * 2 if len(column.dropna()) > 0 else np.nan) #pre v0.17 stats.mannwhitneyu is one-tailed!!
 
 
 #parse a tab-delimited file with column headers: experiment, replicate_id, G_value, K_value (calculated with martin's parse_growthdata.py)
