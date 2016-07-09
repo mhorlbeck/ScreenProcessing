@@ -116,9 +116,11 @@ def parseLibraryFasta(libraryFasta):
 			else:
 				curSeq += line.strip().upper()
 
-	if max(readLengths) != min(readLengths):
+	if len(seqToIds) == 0 or len(idsToReadcounts) == 0 or readLengths[0] == 0:
+		raise ValueError('library fasta could not be parsed or contains no sequences')
+	elif max(readLengths) != min(readLengths):
 		print min(readLengths), max(readLengths)
-		raise ValueError('Library reference sequences are of inconsistent lengths')
+		raise ValueError('library reference sequences are of inconsistent lengths')
 
 	return seqToIds, idsToReadcounts, readLengths[0]
 
@@ -174,10 +176,26 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	#printNow(args)
 
+	###catch input mistakes###
 	numProcessors = max(args.processors, 1)
 
 	infileList, outfileBaseList = parseSeqFileNames(args.Seq_File_Names)
+	if len(infileList) == 0:
+		sys.exit('Input error: no sequencing files found')
 			
+	try:
+		seqToIdDict, idsToReadcountDict, expectedReadLength = parseLibraryFasta(args.Library_Fasta)
+			
+		printNow('Library file loaded successfully:\n\t%.2E elements (%.2E unique sequences)\t%dbp reads expected' \
+				% (len(idsToReadcountDict), len(seqToIdDict), expectedReadLength))
+		
+	except IOError:
+		sys.exit('Input error: library fasta file not found')
+		
+	except ValueError as err:
+		sys.exit('Input error: ' + err.args[0])
+	
+	
 	trimmedFastaPath = os.path.join(args.Out_File_Path,'unaligned_reads')
 	makeDirectory(trimmedFastaPath)
 	countFilePath = os.path.join(args.Out_File_Path,'count_files')
@@ -189,7 +207,11 @@ if __name__ == '__main__':
 
 	pool = multiprocessing.Pool(min(len(infileList),numProcessors))
 
-	resultList = parallelSeqFileToCountsParallel(infileList, fastaFilePathList, countFilePathList, pool, args.Library_Fasta, args.trim_start, args.trim_end, args.test)
+	try:
+		resultList = parallelSeqFileToCountsParallel(infileList, fastaFilePathList, countFilePathList, pool, args.Library_Fasta, args.trim_start, args.trim_end, args.test)
+	except ValueError as err:
+		sys.exit('Error while processing sequencing files: ' + ' '.join(err.args))
+		
 	for filename, result in resultList:
 		print filename + ':\n\t%.2E reads\t%.2E aligning (%.2f%%)' % result
 	
