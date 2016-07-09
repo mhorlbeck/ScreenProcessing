@@ -5,7 +5,6 @@
 import pandas as pd
 import os
 import sys
-from Bio import Seq, Alphabet
 import numpy as np
 import scipy as sp
 import fnmatch
