@@ -6,7 +6,9 @@ import fnmatch
 #output a dict with all of the parameters needed to process experiments
 def parseExptConfig(configFile, librariesToSublibrariesDict):
     parser = SafeConfigParser()
-    parser.read(configFile)
+    results = parser.read(configFile)
+    if len(results) == 0:
+        return None, 1, 'Experiment config file not found'
     
     #output variables
     paramDict = dict()
@@ -25,7 +27,7 @@ def parseExptConfig(configFile, librariesToSublibrariesDict):
     parsedSections = set(parser.sections())
     
     if len(expectedSections) != len(parsedSections) and len(expectedSections) != len(expectedSections.intersection(parsedSections)):
-        return paramDict, 1, 'Config file does not have all required sections or has extraneous sections!\nExpected:' + ','.join(expectedSections)
+        return paramDict, 1, 'Config file does not have all required sections or has extraneous sections!\nExpected:' + ','.join(expectedSections) + '\nFound:' + ','.join(parsedSections)
 
     ##experiment settings
     if parser.has_option('experiment_settings','output_folder'):
@@ -49,7 +51,7 @@ def parseExptConfig(configFile, librariesToSublibrariesDict):
         if parsedLibrary.lower() in libraryDict:
             paramDict['library'] = parsedLibrary.lower()
         else:
-            warningString += 'Library name not recognized\n'
+            warningString += 'Library name \"%s\" not recognized\n' % parsedLibrary
             exitStatus += 1
             
     else:
@@ -368,26 +370,6 @@ def parseExptConfig(configFile, librariesToSublibrariesDict):
 
     return paramDict, exitStatus, warningString
     
-#Replaced with parseLibraryConfig:
-#Will create a file detailing all supported libraries and sublibraries; for now, just a dict:
-#def getSupportedLibraryDict():
-#    return {'CRISPRi_v1':['Apoptosis+Cancer+Other_Cancer',
-#                 'Drug_Targets+Kinase_Phosphotase',
-#                 'Gene_Expression',
-#                 'Membrane_Proteins',
-#                 'Stress_Proteostasis',
-#                 'Trafficking+Mitochondria+Motility',
-#                 'Unassigned',
-#                 'Essential_CRISPRi',
-#                 'Essential_Nuclease'],
-#            'CRISPRa_v1':['Apoptosis+Cancer+Other_Cancer',
-#                 'Drug_Targets+Kinase_Phosphotase',
-#                 'Gene_Expression',
-#                 'Membrane_Proteins',
-#                 'Stress_Proteostasis',
-#                 'Trafficking+Mitochondria+Motility',
-#                 'Unassigned']}
-
 #Parse the library configuration file to get the available libraries, sublibraries, and corresponding library table files
 def parseLibraryConfig(libConfigFile):
     parser = SafeConfigParser()
@@ -402,4 +384,7 @@ def parseLibraryConfig(libConfigFile):
         sublibraryList = parser.get(library, 'sublibraries').strip().split('\n')
         librariesToSublibraries[library.lower()] = [sub.strip().lower() for sub in sublibraryList]
 
+    if len(librariesToTables) == 0:
+        raise ValueError('Library config file not found or empty')
+    
     return librariesToSublibraries, librariesToTables

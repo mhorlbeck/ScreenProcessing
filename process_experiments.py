@@ -21,7 +21,11 @@ defaultLibConfigName = 'library_config.txt'
 #error checking in config parser is fairly robust, so not checking for input errors here
 def processExperimentsFromConfig(configFile, libraryDirectory):
     #load in the supported libraries and sublibraries
-    librariesToSublibraries, librariesToTables = parseLibraryConfig(os.path.join(libraryDirectory, defaultLibConfigName))
+    try:
+        librariesToSublibraries, librariesToTables = parseLibraryConfig(os.path.join(libraryDirectory, defaultLibConfigName))
+    except ValueError as err:
+        print ' '.join(err.args)
+        return
 
     exptParameters, parseStatus, parseString = parseExptConfig(configFile, librariesToSublibraries)
 
@@ -29,7 +33,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
     sys.stdout.flush()
 
     if parseStatus > 0: #Critical errors in parsing
-        print 'Exiting due to parsing errors\n'
+        print 'Exiting due to experiment config file errors\n'
         return
 
     makeDirectory(exptParameters['output_folder'])
@@ -40,7 +44,11 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
     sys.stdout.flush()
 
     libraryTable = pd.read_csv(os.path.join(libraryDirectory, librariesToTables[exptParameters['library']]), sep = '\t', tupleize_cols=False, header=0, index_col=0).sort_index()
-    sublibColumn = libraryTable.apply(lambda row: row['sublibrary'] in exptParameters['sublibraries'], axis=1)
+    sublibColumn = libraryTable.apply(lambda row: row['sublibrary'].lower() in exptParameters['sublibraries'], axis=1)
+
+    if sum(sublibColumn) == 0:
+        print 'After limiting analysis to specified sublibraries, no elements are left'
+        return
 
     libraryTable[sublibColumn].to_csv(outbase + '_librarytable.txt', sep='\t', tupelize_cols = False)
 
