@@ -6,9 +6,7 @@ import gzip
 import multiprocessing
 import fnmatch
 import glob
-import csv
 import argparse
-from Bio import SeqIO
 
 ### Sequence File to Trimmed Fasta Functions ###
 
@@ -97,18 +95,26 @@ def seqFileToCounts(infileName, fastaFileName, countFileName, libraryFasta, star
 def parseLibraryFasta(libraryFasta):
 	seqToIds, idsToReadcounts, readLengths = dict(), dict(), []
 
+	curSeqId = ''
+	curSeq = ''
+	
 	with open(libraryFasta) as infile:
-		for seqrecord in SeqIO.parse(infile,'fasta'):
-			seq = str(seqrecord.seq).upper()
-			id = seqrecord.id
+		for line in infile:
+			if line[0] == '>':
+				if curSeqId != '' and curSeq != '':
+					if curSeq not in seqToIds:
+						seqToIds[curSeq] = []
+					seqToIds[curSeq].append(curSeqId)
 
-			if seq not in seqToIds:
-				seqToIds[seq] = []
-			seqToIds[seq].append(id)
+					idsToReadcounts[curSeqId] = 0
 
-			idsToReadcounts[id] = 0
-
-			readLengths.append(len(seq))
+					readLengths.append(len(curSeq))
+					
+				curSeqId = line.strip()[1:]
+				curSeq = ''
+				
+			else:
+				curSeq += line.strip().upper()
 
 	if max(readLengths) != min(readLengths):
 		print min(readLengths), max(readLengths)
