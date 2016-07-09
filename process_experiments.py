@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import argparse
 
 from expt_config_parser import parseExptConfig, parseLibraryConfig
+from fastqgz_to_counts import makeDirectory
 
 defaultLibConfigName = 'library_config.txt'
 
@@ -31,6 +32,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
         print 'Exiting due to parsing errors\n'
         return
 
+    makeDirectory(exptParameters['output_folder'])
     outbase = os.path.join(exptParameters['output_folder'],exptParameters['experiment_name'])
 
     #load in library table and filter to requested sublibraries
