@@ -42,10 +42,10 @@ plt.rcParams['patch.edgecolor'] = 'none'
 plt.rcParams['patch.linewidth'] = .25
 # plt.rcParams['patch.facecolor'] = dark2_all[0]
 
-plt.rcParams['savefig.dpi']=1000
-plt.rcParams['savefig.format'] = 'svg'
-plt.rcParams['legend.frameon'] = False
+# plt.rcParams['savefig.dpi']=1000
+# plt.rcParams['savefig.format'] = 'svg'
 
+plt.rcParams['legend.frameon'] = False
 plt.rcParams['legend.handletextpad'] = .25
 plt.rcParams['legend.fontsize'] = 8
 plt.rcParams['legend.numpoints'] = 1
@@ -150,6 +150,8 @@ def countsScatter(data, condition_x = None, replicate_x = None,
     fig.show()
 
 ##phenotype-level plotting functions
+#not yet implemented: counts vs phenotype
+
 def phenotypeHistogram(data, phenotype=None, replicate=None):
     if not checkOptions(data, 'phenotypes', (phenotype,replicate)):
         return
@@ -174,7 +176,70 @@ def phenotypeHistogram(data, phenotype=None, replicate=None):
     plt.tight_layout()
     fig.show()
 
+def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
+                        phenotype_y = None, replicate_y = None,
+                        showAll = True, showNegatives = True, 
+                        showGenes = [], showGeneSets = {}):
+                            
+    if not checkOptions(data, 'phenotypes', (phenotype_x,replicate_x)):
+        return
+    if not checkOptions(data, 'phenotypes', (phenotype_y,replicate_y)):
+        return
+        
+    fig, axis = plt.subplots(figsize=(3,3))
+    cleanAxes(axis)
+    
+    if showAll:
+        axis.scatter(data['phenotypes'].loc[:, (phenotype_x, replicate_x)], 
+            data['phenotypes'].loc[:, (phenotype_y, replicate_y)], 
+            s=1.5, c=almost_black, label='all sgRNAs')
+    
+    if showNegatives:
+        axis.scatter(data['phenotypes'].loc[data['library']['gene'] == 'negative_control', (phenotype_x, replicate_x)], 
+            data['phenotypes'].loc[data['library']['gene'] == 'negative_control', (phenotype_y, replicate_y)], 
+            s=1.5, c='#BFBFBF', label='non-targeting sgRNAs')
+            
+    i=0
+    if showGenes and len(showGenes) != 0:
+        if isinstance(showGenes,str):
+            showGenes = [showGenes]
+            
+        geneSet = set(data['library']['gene'])
+        for i, gene in enumerate(showGenes):
+            if gene not in geneSet:
+                print '{0} not in dataset'.format(gene)
+            else:
+                axis.scatter(data['phenotypes'].loc[data['library']['gene'] == gene, (phenotype_x, replicate_x)], 
+                    data['phenotypes'].loc[data['library']['gene'] == gene, (phenotype_y, replicate_y)], 
+                    s=3, c=dark2[i], label=gene)
+                    
+    if showGeneSets and len(showGeneSets) != 0:
+        if not isinstance(showGeneSets,dict) or not \
+            (isinstance(showGeneSets[showGeneSets.keys()[0]], set) or isinstance(showGeneSets[showGeneSets.keys()[0]], list)):
+            print 'Gene sets must be a dictionary of {set_name: [gene list/set]} pairs'
+            
+        else:
+            for j, gs in enumerate(showGeneSets):
+                sgsTargetingSet = data['library']['gene'].apply(lambda gene: gene in showGeneSets[gs])
+                axis.scatter(data['phenotypes'].loc[sgsTargetingSet, (phenotype_x, replicate_x)], 
+                    data['phenotypes'].loc[sgsTargetingSet, (phenotype_y, replicate_y)], 
+                    s=3, c=dark2[i+j], label=gs)
+                    
+    plotGrid(axis)
+                    
+    plt.legend(loc='best', fontsize=6, handletextpad=0.005)
+    
+    axis.set_xlabel('sgRNA {0} {1}'.format(phenotype_x, replicate_x), fontsize=8)
+    axis.set_ylabel('sgRNA {0} {1}'.format(phenotype_y, replicate_y), fontsize=8)
+    
+    plt.tight_layout()
+    fig.show()
+
 ##gene-level plotting functions
+def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPseudo=True):
+    if not checkOptions(data, 'genes', (phenotype,replicate)):
+        return
+
 
 
 ##utility functions
@@ -218,6 +283,21 @@ def listOptions(data, graphType):
     else:
         print 'Graph type not recognized'
     
+def plotGrid(axis, vert_origin = True, horiz_origin=True, unity=True):
+    ylim = axis.get_ylim()
+    xlim = axis.get_xlim()
+    if vert_origin:
+        axis.plot((0,0), ylim, color='#BFBFBF', lw=.5, alpha=.5) 
+    if horiz_origin:
+        axis.plot(xlim,(0,0), color='#BFBFBF', lw=.5, alpha=.5) 
+    if vert_origin:
+        xmin = min(xlim[0], ylim[0])
+        xmax = max(xlim[1], ylim[1])
+        axis.plot((xmin,xmax),(xmin,xmax), color='#BFBFBF', lw=.5, alpha=.5) 
+        
+    axis.set_ylim(ylim)
+    axis.set_xlim(xlim)
+
 #adapted from http://nbviewer.ipython.org/github/cs109/content/blob/master/lec_03_statistical_graphs.ipynb    
 def cleanAxes(axis, top=False, right=False, bottom=True, left=True):
     axis.spines['top'].set_visible(top)
