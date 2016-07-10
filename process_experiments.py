@@ -1,4 +1,3 @@
-# Planned functionality:
 # merge counts files into a data table, combine reads from multiple sequencing runs,
 #  filter by read counts, generate phenotype scores, average replicates
 
@@ -9,7 +8,6 @@ import numpy as np
 import scipy as sp
 import fnmatch
 import scipy.stats.mstats as ms
-import matplotlib.pyplot as plt
 import argparse
 
 from expt_config_parser import parseExptConfig, parseLibraryConfig
@@ -549,13 +547,7 @@ def parseGKFile(gkFileName):
 
     return gkdict
 
-    
-def rasteredScatter(series1,series2,label1,label2,outfilename):
-    # print outfilename
-    pass
 
-def generateHistogram(series, label, outfilename):
-    pass
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Calculate sgRNA- and gene-level phenotypes based on sequencing read counts, as specified by the experiment config file.')
