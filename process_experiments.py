@@ -7,7 +7,6 @@ import sys
 import numpy as np
 import scipy as sp
 import fnmatch
-import scipy.stats.mstats as ms
 import argparse
 
 from expt_config_parser import parseExptConfig, parseLibraryConfig
@@ -365,41 +364,6 @@ def filterLowCounts(countsColumns, filterType, filterThreshold):
     return resultTable
 
 
-#compute phenotype scores for each experiment
-#default pseudocount behavior is +1 for any element with a zero value
-def computeAllPhenotypeScores(startCondition, endUntreatedCondition, endTreatedCondition, exptsTable, libraryTable, exptToGKvalues, pseudocounts = 'default', normToNegs=True):
-    gammaList = []
-    tauList = []
-    rhoList = []
-
-    exptTuples = exptsTable.columns
-    exptsToReplicates = dict()
-    for tup in exptTuples:
-        if tup[0] not in exptsToReplicates:
-            exptsToReplicates[tup[0]] = set()
-        exptsToReplicates[tup[0]].add(tup[2])
-
-    labels = []
-    for expt in exptsToReplicates:
-        for rep in exptsToReplicates[expt]:
-            labels.append((expt,rep))
-            gammaList.append(computePhenotypeScore(exptsTable[(expt,startCondition,rep)], \
-                exptsTable[(expt,endUntreatedCondition,rep)], libraryTable, exptToGKvalues[(expt,rep)][0],pseudocounts, normToNegs))
-            tauList.append(computePhenotypeScore(exptsTable[(expt,startCondition,rep)], \
-                exptsTable[(expt,endTreatedCondition,rep)], libraryTable, exptToGKvalues[(expt,rep)][0] - exptToGKvalues[(expt,rep)][1],pseudocounts, normToNegs))
-            rhoList.append(computePhenotypeScore(exptsTable[(expt,endUntreatedCondition,rep)], \
-                exptsTable[(expt,endTreatedCondition,rep)], libraryTable, exptToGKvalues[(expt,rep)][1],pseudocounts, normToNegs))
-
-    #print labels
-    gammas = pd.concat(gammaList, axis = 1, keys = [(lab[0],'gamma',lab[1]) for lab in labels]).align(libraryTable, axis = 0)[0]
-    gammas.columns = pd.MultiIndex.from_tuples([(lab[0],'gamma',lab[1]) for lab in labels])
-    taus = pd.concat(tauList, axis = 1, keys = [(lab[0],'tau',lab[1]) for lab in labels]).align(libraryTable, axis = 0)[0]
-    taus.columns = pd.MultiIndex.from_tuples([(lab[0],'tau',lab[1]) for lab in labels])
-    rhos = pd.concat(rhoList, axis = 1, keys = [(lab[0],'rho',lab[1]) for lab in labels]).align(libraryTable, axis = 0)[0]
-    rhos.columns = pd.MultiIndex.from_tuples([(lab[0],'rho',lab[1]) for lab in labels])
-
-    return gammas, taus, rhos
-
 #compute phenotype scores for any given comparison of two conditions
 def computePhenotypeScore(counts1, counts2, libraryTable, growthValue, pseudocountBehavior, pseudocountValue, normToNegs=True):
     combinedCounts = pd.concat([counts1,counts2],axis = 1)
@@ -481,21 +445,6 @@ def computeGeneScores(libraryTable, scoreTable, normToNegs = True):
     
     #return scoredColumns
     return pd.concat(scoredColumns, axis = 1, keys=scoreTable.columns)
-
-def geneStats(scoreColumn, negArray):
-    scoreArray = np.ma.array(data=scoreColumn.dropna(), mask=False)
-    ksPval = ms.ks_twosamp(scoreArray, negArray)[1]
-    
-    ksHi = ms.ks_twosamp(scoreArray, negArray, alternative = 'less')[1]
-    ksLo = ms.ks_twosamp(scoreArray, negArray, alternative = 'greater')[1]
-    if ksHi < ksLo:
-        ksSign = 'P'
-    else:
-        ksSign = 'S'
-
-    mwPval = ms.mannwhitneyu(scoreArray, negArray)[1]
-
-    return ksPval, ksSign, mwPval
 
 #apply gene scoring functions to pre-grouped tables of phenotypes
 def applyGeneScoreFunction(groupedPhenotypeTable, negativeTable, analysis, analysisParamList):
