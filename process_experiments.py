@@ -75,23 +75,23 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
     print 'Generating scatter plots of counts pre-merger and histograms of counts post-merger'
     sys.stdout.flush()
 
-    exptGroups = countsTable.groupby(level=[0,1], axis=1)
-    for (condition, replicate), countsCols in exptGroups:
-        if len(countsCols.columns) == 1:
-            continue
-
-        for i, col1 in enumerate(countsCols):
-            for j, col2 in enumerate(countsCols):
-                if j > i: #enforce that each pair is compared once
-                    rasteredScatter(countsCols[col1],countsCols[col2],'\n'.join(col1),
-                        '\n'.join(col2),outbase + '_premergescatter_%s_%s_%dv%d.svg' % (condition,replicate,i,j))
+#     exptGroups = countsTable.groupby(level=[0,1], axis=1)
+#     for (condition, replicate), countsCols in exptGroups:
+#         if len(countsCols.columns) == 1:
+#             continue
+# 
+#         for i, col1 in enumerate(countsCols):
+#             for j, col2 in enumerate(countsCols):
+#                 if j > i: #enforce that each pair is compared once
+#                     rasteredScatter(countsCols[col1],countsCols[col2],'\n'.join(col1),
+#                         '\n'.join(col2),outbase + '_premergescatter_%s_%s_%dv%d.svg' % (condition,replicate,i,j))
 
     mergedCountsTable = exptGroups.aggregate(np.sum)
     mergedCountsTable.to_csv(outbase + '_mergedcountstable.txt', sep='\t', tupleize_cols = False)
     mergedCountsTable.sum().to_csv(outbase + '_mergedcountstable_summary.txt', sep='\t')
 
-    for col in mergedCountsTable:
-        generateHistogram(mergedCountsTable[col],', '.join(col),outbase + '_postmergehist_%s_%s.svg' % (condition,replicate))
+#     for col in mergedCountsTable:
+#         generateHistogram(mergedCountsTable[col],', '.join(col),outbase + '_postmergehist_%s_%s.svg' % (condition,replicate))
 
     #create pairs of columns for each comparison, filter to na, then generate sgRNA phenotype score
     print 'Computing sgRNA phenotype scores'
@@ -121,13 +121,13 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
         print 'Plotting and averaging replicates'
         sys.stdout.flush()
 
-        for phenotype in phenotypeList:
-            for i, rep1 in enumerate(replicateList):
-                for j, rep2 in enumerate(replicateList):
-                    if j > i:
-                        rasteredScatter(phenotypeScoreDict[(phenotype,rep1)],phenotypeScoreDict[(phenotype,rep2)],
-                            ', '.join((phenotype,rep1)), ', '.join((phenotype,rep2)),
-                            outbase + '_phenotypescatter_%s_%sv%s.svg' % (condition,rep1,rep2))
+#         for phenotype in phenotypeList:
+#             for i, rep1 in enumerate(replicateList):
+#                 for j, rep2 in enumerate(replicateList):
+#                     if j > i:
+#                         rasteredScatter(phenotypeScoreDict[(phenotype,rep1)],phenotypeScoreDict[(phenotype,rep2)],
+#                             ', '.join((phenotype,rep1)), ', '.join((phenotype,rep2)),
+#                             outbase + '_phenotypescatter_%s_%sv%s.svg' % (condition,rep1,rep2))
 
             repCols = pd.DataFrame({(phen,rep):col for (phen,rep), col in phenotypeScoreDict.iteritems() if phen == phenotype})
             phenotypeScoreDict[(phenotype,'ave_' + '_'.join(replicateList))] = repCols.mean(axis=1,skipna=False) #average nan and real to nan; otherwise this could lead to data points with just one rep informing results
