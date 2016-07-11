@@ -297,6 +297,32 @@ def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
     plt.tight_layout()
     displayFigure(fig, 'phenotype_scatter')
 
+def sgRNAsPassingFilterHist(data, phenotype, replicate, transcripts=False):
+    if not checkOptions(data, 'phenotypes', (phenotype,replicate)):
+        return
+        
+    fig, axis = plt.subplots(figsize=(3.5,2.5))
+    cleanAxes(axis)
+    
+    axis.semilogy()
+    
+    if transcripts:
+        sgRNAsPerGene = data['phenotypes'].loc[data['library']['gene'] != 'negative_control', (phenotype, replicate)].groupby([data['library']['gene'],data['library']['transcripts']]).count()
+    else:
+        sgRNAsPerGene = data['phenotypes'].loc[data['library']['gene'] != 'negative_control', (phenotype, replicate)].groupby(data['library']['gene']).count()
+    
+    axis.hist(sgRNAsPerGene,
+        bins=np.arange(min(sgRNAsPerGene), max(sgRNAsPerGene) + 1, 1), 
+        histtype='step', color=almost_black, lw=1)
+    
+    axis.set_ylim((0.9, axis.get_ylim()[1])) 
+    
+    axis.set_xlabel('{0} {1} sgRNAs passing filter per {2}'.format(phenotype, replicate, 'transcript' if transcripts else 'gene'))
+    axis.set_ylabel('Number of sgRNAs')
+    
+    plt.tight_layout()
+    displayFigure(fig, 'sgRNAs_passing_filter_hist')
+    
 ##gene-level plotting functions
 def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPseudo=True,
             effectSizeLabel=None, pvalueLabel=None, hitThreshold=7,

@@ -10,13 +10,14 @@ import fnmatch
 import argparse
 
 from expt_config_parser import parseExptConfig, parseLibraryConfig
-from fastqgz_to_counts import makeDirectory
+from fastqgz_to_counts import makeDirectory, printNow
+import screen_analysis
 
 defaultLibConfigName = 'library_config.txt'
 
 #a screen processing pipeline that requires just a config file and a directory of supported libraries
 #error checking in config parser is fairly robust, so not checking for input errors here
-def processExperimentsFromConfig(configFile, libraryDirectory):
+def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots=True):
     #load in the supported libraries and sublibraries
     try:
         librariesToSublibraries, librariesToTables = parseLibraryConfig(os.path.join(libraryDirectory, defaultLibConfigName))
@@ -26,8 +27,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
 
     exptParameters, parseStatus, parseString = parseExptConfig(configFile, librariesToSublibraries)
 
-    print parseString
-    sys.stdout.flush()
+    printNow(parseString)
 
     if parseStatus > 0: #Critical errors in parsing
         print 'Exiting due to experiment config file errors\n'
@@ -35,10 +35,16 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
 
     makeDirectory(exptParameters['output_folder'])
     outbase = os.path.join(exptParameters['output_folder'],exptParameters['experiment_name'])
+    
+    if generatePlots:
+        plotDirectory = os.path.join(exptParameters['output_folder'],exptParameters['experiment_name'] + '_plots')
+        makeDirectory(plotDirectory)
+    
+        screen_analysis.changeDisplayFigureSettings(newDirectory=plotDirectory, newImageExtension = 'svg', newPlotWithPylab = False)
+    
 
     #load in library table and filter to requested sublibraries
-    print 'Accessing library information'
-    sys.stdout.flush()
+    printNow('Accessing library information')
 
     libraryTable = pd.read_csv(os.path.join(libraryDirectory, librariesToTables[exptParameters['library']]), sep = '\t', tupleize_cols=False, header=0, index_col=0).sort_index()
     sublibColumn = libraryTable.apply(lambda row: row['sublibrary'].lower() in exptParameters['sublibraries'], axis=1)
@@ -50,8 +56,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
     libraryTable[sublibColumn].to_csv(outbase + '_librarytable.txt', sep='\t', tupelize_cols = False)
 
     #load in counts, create table of total counts in each and each file as a column
-    print 'Loading counts data'
-    sys.stdout.flush()
+    printNow('Loading counts data')
 
     columnDict = dict()
     for tup in sorted(exptParameters['counts_file_list']):
@@ -71,31 +76,37 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
 
     #merge counts for same conditions/replicates, and create summary table
     #save scatter plot before each merger, and histogram of counts post mergers
-    print 'Merging experiment counts split across lanes/indexes'
-    print 'Generating scatter plots of counts pre-merger and histograms of counts post-merger'
-    sys.stdout.flush()
-
-#     exptGroups = countsTable.groupby(level=[0,1], axis=1)
-#     for (condition, replicate), countsCols in exptGroups:
-#         if len(countsCols.columns) == 1:
-#             continue
-# 
-#         for i, col1 in enumerate(countsCols):
-#             for j, col2 in enumerate(countsCols):
-#                 if j > i: #enforce that each pair is compared once
-#                     rasteredScatter(countsCols[col1],countsCols[col2],'\n'.join(col1),
-#                         '\n'.join(col2),outbase + '_premergescatter_%s_%s_%dv%d.svg' % (condition,replicate,i,j))
-
+    printNow('Merging experiment counts split across lanes/indexes')
+    
+    exptGroups = countsTable.groupby(level=[0,1], axis=1)
     mergedCountsTable = exptGroups.aggregate(np.sum)
     mergedCountsTable.to_csv(outbase + '_mergedcountstable.txt', sep='\t', tupleize_cols = False)
     mergedCountsTable.sum().to_csv(outbase + '_mergedcountstable_summary.txt', sep='\t')
+    
+    if generatePlots and max(exptGroups.count().iloc[0]) > 1:
+        printNow('-generating scatter plots of counts pre-merger')
+    
+        tempDataDict = {'library': libraryTable[sublibColumn],
+                        'premerged counts': countsTable}
 
-#     for col in mergedCountsTable:
-#         generateHistogram(mergedCountsTable[col],', '.join(col),outbase + '_postmergehist_%s_%s.svg' % (condition,replicate))
+        for (phenotype, replicate), countsCols in exptGroups:
+            if len(countsCols.columns) == 1:
+                continue
+            
+            else:
+                screen_analysis.premergedCountsScatterMatrix(tempDataDict, phenotype, replicate)
 
+    if generatePlots:
+        printNow('-generating sgRNA read count histograms')
+    
+        tempDataDict = {'library': libraryTable[sublibColumn],
+                        'counts': mergedCountsTable}
+                    
+        for (phenotype, replicate), countsCol in mergedCountsTable.iteritems():
+            screen_analysis.countsHistogram(tempDataDict, phenotype, replicate)
+    
     #create pairs of columns for each comparison, filter to na, then generate sgRNA phenotype score
-    print 'Computing sgRNA phenotype scores'
-    sys.stdout.flush()
+    printNow('Computing sgRNA phenotype scores')
 
     growthValueDict = {(tup[0],tup[1]):tup[2] for tup in exptParameters['growth_value_tuples']}
     phenotypeList = list(set(zip(*exptParameters['condition_tuples'])[0]))
@@ -114,14 +125,27 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
                 exptParameters['pseudocount_behavior'], exptParameters['pseudocount'])
 
             phenotypeScoreDict[(phenotype,replicate)] = score
-
+    
+    if generatePlots:
+        tempDataDict = {'library': libraryTable[sublibColumn],
+                        'counts': mergedCountsTable,
+                        'phenotypes': pd.DataFrame(phenotypeScoreDict)}
+                        
+        printNow('-generating phenotype histograms and scatter plots')
+        
+        for (phenotype, condition1, condition2) in exptParameters['condition_tuples']:
+            for replicate in replicateList:
+                screen_analysis.countsScatter(tempDataDict, condition1, replicate, condition2, replicate, 
+                    colorByPhenotype_condition = phenotype, colorByPhenotype_replicate = replicate)
+                    
+                screen_analysis.phenotypeHistogram(tempDataDict, phenotype, replicate)
+                screen_analysis.sgRNAsPassingFilterHist(tempDataDict, phenotype, replicate)
     
     #scatterplot sgRNAs for all replicates, then average together and add columns to phenotype score table
     if len(replicateList) > 1:
-        print 'Plotting and averaging replicates'
-        sys.stdout.flush()
+        printNow('Averaging replicates')
 
-#         for phenotype in phenotypeList:
+        for phenotype in phenotypeList:
 #             for i, rep1 in enumerate(replicateList):
 #                 for j, rep2 in enumerate(replicateList):
 #                     if j > i:
@@ -134,6 +158,25 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
 
     phenotypeTable = pd.DataFrame(phenotypeScoreDict)
     phenotypeTable.to_csv(outbase + '_phenotypetable.txt', sep='\t', tupleize_cols = False)
+
+    if len(replicateList) > 1 and generatePlots:
+        tempDataDict = {'library': libraryTable[sublibColumn],
+                        'phenotypes': phenotypeTable}
+                    
+        printNow('-generating replicate phenotype histograms and scatter plots')
+    
+        for phenotype, phengroup in phenotypeTable.groupby(level=0, axis=1):
+            for i, ((p, rep1), col1) in enumerate(phengroup.iteritems()):
+                if rep1[:4] == 'ave_':
+                    screen_analysis.phenotypeHistogram(tempDataDict, phenotype, rep1)
+            
+                for j, ((p, rep2), col2) in enumerate(phengroup.iteritems()):
+                    if rep2[:4] == 'ave_' or j<=i:
+                        continue
+                    
+                    else:
+                        screen_analysis.phenotypeScatter(tempDataDict, phenotype, rep1, phenotype, rep2)                    
+                
 
     #generate pseudogenes
     negTable = phenotypeTable.loc[libraryTable[sublibColumn].loc[:,'gene'] == 'negative_control',:]
@@ -181,9 +224,6 @@ def processExperimentsFromConfig(configFile, libraryDirectory):
         libraryTableGeneAnalysis = libraryTable[sublibColumn].append(pd.concat(pseudoLibTables))
     else:
         libraryTableGeneAnalysis = libraryTable[sublibColumn]
-
-    # print libraryTableGeneAnalysis
-    # return phenotypeTable, libraryTableGeneAnalysis
 
     #compute gene scores for replicates, averaged reps, and pseudogenes
     if len(exptParameters['analyses']) > 0:
