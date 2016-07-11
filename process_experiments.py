@@ -6,6 +6,7 @@ import os
 import sys
 import numpy as np
 import scipy as sp
+from scipy import stats
 import fnmatch
 import argparse
 
@@ -517,9 +518,9 @@ def averageBestN(group, numToAverage):
 
 def applyMW(group, negativeTable):
     if int(sp.__version__.split('.')[1]) >= 17: #implementation of the "alternative flag":
-        return group.apply(lambda column: sp.stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values, alternative = 'two-sided')[1] if len(column.dropna()) > 0 else np.nan)
+        return group.apply(lambda column: stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values, alternative = 'two-sided')[1] if len(column.dropna()) > 0 else np.nan)
     else:
-        return group.apply(lambda column: sp.stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values)[1] * 2 if len(column.dropna()) > 0 else np.nan) #pre v0.17 stats.mannwhitneyu is one-tailed!!
+        return group.apply(lambda column: stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values)[1] * 2 if len(column.dropna()) > 0 else np.nan) #pre v0.17 stats.mannwhitneyu is one-tailed!!
 
 
 #parse a tab-delimited file with column headers: experiment, replicate_id, G_value, K_value (calculated with martin's parse_growthdata.py)
