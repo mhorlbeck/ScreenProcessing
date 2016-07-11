@@ -516,7 +516,7 @@ def getPvalueLabel(table):
         
 def displayFigure(fig, savetitle=''):
     if plotWithPylab:
-        fig.show()
+        plt.show(fig)
         
     if plotDirectory != None:
         figNums = [int(fileName.split('_fig_')[0]) for fileName in os.listdir(plotDirectory) if len(fileName.split('_fig_')) >= 2]
@@ -530,7 +530,7 @@ def displayFigure(fig, savetitle=''):
         fig.savefig(fullTitle, dpi=1000)
         plt.close(fig) 
         
-    if plotDirectory == None and 'inline' not in matplotlib.get_backend():
+    if plotDirectory == None and not plotWithPylab:
         print 'Must be in pylab and/or set a plot directory to display figures'
         
         plt.close(fig) 
