@@ -28,7 +28,7 @@ blue_yellow.set_bad('#999999',1)
 yellow_blue = matplotlib.colors.LinearSegmentedColormap.from_list('YlBu',[(0,'#0000ff'),(.49,'#000000'),(.51,'#000000'),(1,'#ffff00')])
 yellow_blue.set_bad('#999999',1)
 
-plt.rcParams['font.sans-serif'] = ['Helvetica', 'Arial']
+plt.rcParams['font.sans-serif'] = ['Helvetica', 'Arial', 'Verdana','Bitstream Vera Sans']
 plt.rcParams['font.size'] = 8
 plt.rcParams['font.weight'] = 'regular'
 plt.rcParams['text.color'] = almost_black
@@ -72,8 +72,9 @@ def loadData(experimentName, collapsedToTranscripts = True, premergedCounts = Fa
     
     if collapsedToTranscripts:
         dataDict['transcript scores'] = pd.read_csv(experimentName + '_genetable.txt',sep='\t',header=range(3),index_col=range(2))
-    
-    dataDict['gene scores'] = pd.read_csv(experimentName + '_genetable_collapsed.txt',sep='\t',header=range(3),index_col=range(1))
+        dataDict['gene scores'] = pd.read_csv(experimentName + '_genetable_collapsed.txt',sep='\t',header=range(3),index_col=range(1))
+    else:
+        dataDict['gene scores'] = pd.read_csv(experimentName + '_genetable.txt',sep='\t',header=range(3),index_col=range(1))
     
     return dataDict
 
@@ -86,11 +87,20 @@ def countsHistogram(data, condition=None, replicate=None):
     fig, axis = plt.subplots(figsize=(3.5,2.5))
     cleanAxes(axis)
     
-    axis.hist(np.log2(data['counts'].loc[:, (condition, replicate)].dropna() + 1), 
-        bins=int(len(data['counts']) ** .3), 
-        histtype='stepfilled', color=almost_black)
+    axis.semilogy()
     
-#     axis.set_xlim((-0.1, axis.get_xlim()[1])) 
+    logCounts = np.log2(data['counts'].loc[:, (condition, replicate)].fillna(0) + 1)
+    
+    axis.hist(logCounts, 
+        bins=int(len(data['counts']) ** .3), 
+        histtype='step', color=almost_black, lw=1)
+        
+    ymax = axis.get_ylim()[1]
+    axis.plot([np.median(logCounts)]*2, (0.8,ymax), color='#BFBFBF', lw=.5, alpha=.5)
+    axis.text(np.median(logCounts)*.98, ymax *.90, 'median reads = {0:.0f}'.format(np.median(data['counts'].loc[:, (condition, replicate)].fillna(0))),
+        horizontalalignment='right', verticalalignment='top', fontsize=6)
+    
+    axis.set_ylim((0.9, ymax)) 
     
     axis.set_xlabel('{0} {1} sgRNA read counts (log2)'.format(condition, replicate))
     axis.set_ylabel('Number of sgRNAs')
@@ -518,9 +528,11 @@ def displayFigure(fig, savetitle=''):
         fullTitle =  os.path.join(plotDirectory,'{0:03d}_fig_{1}.{2}'.format(nextFigNum, savetitle, imageExtension))
         print fullTitle
         fig.savefig(fullTitle, dpi=1000)
+        plt.close(fig) 
         
     if plotDirectory == None and 'inline' not in matplotlib.get_backend():
         print 'Must be in pylab and/or set a plot directory to display figures'
+        
         plt.close(fig) 
         
 def changeDisplayFigureSettings(newDirectory=None, newImageExtension = 'svg', newPlotWithPylab = True):

@@ -147,13 +147,6 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots=Tru
         printNow('Averaging replicates')
 
         for phenotype in phenotypeList:
-#             for i, rep1 in enumerate(replicateList):
-#                 for j, rep2 in enumerate(replicateList):
-#                     if j > i:
-#                         rasteredScatter(phenotypeScoreDict[(phenotype,rep1)],phenotypeScoreDict[(phenotype,rep2)],
-#                             ', '.join((phenotype,rep1)), ', '.join((phenotype,rep2)),
-#                             outbase + '_phenotypescatter_%s_%sv%s.svg' % (condition,rep1,rep2))
-
             repCols = pd.DataFrame({(phen,rep):col for (phen,rep), col in phenotypeScoreDict.iteritems() if phen == phenotype})
             phenotypeScoreDict[(phenotype,'ave_' + '_'.join(replicateList))] = repCols.mean(axis=1,skipna=False) #average nan and real to nan; otherwise this could lead to data points with just one rep informing results
 
@@ -254,6 +247,15 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots=Tru
 
             geneTableCollapsed = scoreGeneByBestTranscript(geneTable)
             geneTableCollapsed.to_csv(outbase + '_genetable_collapsed.txt',sep='\t', tupleize_cols = False)
+    
+    if generatePlots:
+        if 'calculate_ave' in exptParameters['analyses'] and 'calculate_mw' in exptParameters['analyses']:
+            tempDataDict = {'library': libraryTable[sublibColumn],
+                            'gene scores': geneTableCollapsed if exptParameters['collapse_to_transcripts'] else geneTable}
+                            
+            for (phenotype, replicate), gtable in geneTableCollapsed.groupby(level=[0,1], axis=1):
+                if len(replicateList) == 1 or replicate[:4] == 'ave_': #just plot averaged reps where available
+                    screen_analysis.volcanoPlot(tempDataDict, phenotype, replicate, labelHits=True)
 
     print 'Done!'
 
