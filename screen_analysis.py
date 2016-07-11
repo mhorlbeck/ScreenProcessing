@@ -10,6 +10,8 @@ import scipy as sp
 
 
 plotDirectory = None ##set to a directory to save figures 
+imageExtension = 'svg'
+plotWithPylab = True ##call plt.show when figures are done
 
 ##Matplotlib settings
 almost_black = '#111111'
@@ -60,10 +62,13 @@ plt.rcParams['xtick.direction'] = 'out'
 plt.rcParams['xtick.color'] = almost_black
 plt.rcParams['xtick.major.width'] = axisLineWidth
 
-def loadData(experimentName, collapsedToTranscripts = True):
+def loadData(experimentName, collapsedToTranscripts = True, premergedCounts = False):
     dataDict = {'library': pd.read_csv(experimentName + '_librarytable.txt',sep='\t',header=0,index_col=0),
     'counts': pd.read_csv(experimentName + '_mergedcountstable.txt',sep='\t',header=range(2),index_col=range(1)),
     'phenotypes': pd.read_csv(experimentName + '_phenotypetable.txt',sep='\t',header=range(2),index_col=range(1))}
+    
+    if premergedCounts:
+        dataDict['premerged counts'] = pd.read_csv(experimentName + '_rawcountstable.txt',sep='\t',header=range(3),index_col=range(1))
     
     if collapsedToTranscripts:
         dataDict['transcript scores'] = pd.read_csv(experimentName + '_genetable.txt',sep='\t',header=range(3),index_col=range(2))
@@ -75,7 +80,7 @@ def loadData(experimentName, collapsedToTranscripts = True):
 
 ##read counts-level plotting functions
 def countsHistogram(data, condition=None, replicate=None):
-    if not checkOptions(data, 'counts', (phenotype,replicate)):
+    if not checkOptions(data, 'counts', (condition,replicate)):
         return
         
     fig, axis = plt.subplots(figsize=(3.5,2.5))
@@ -113,19 +118,22 @@ def countsScatter(data, condition_x = None, replicate_x = None,
         if colorByPhenotype_condition == None or colorByPhenotype_replicate == None:
             axis.scatter(np.log2(data['counts'].loc[:, (condition_x, replicate_x)] + 1), 
                 np.log2(data['counts'].loc[:, (condition_y, replicate_y)] + 1), 
-                s=1.5, c=almost_black, label='all sgRNAs')
+                s=1.5, c=almost_black, label='all sgRNAs',
+                     rasterized=True)
         else:
             result = axis.scatter(np.log2(data['counts'].loc[:, (condition_x, replicate_x)] + 1), 
                 np.log2(data['counts'].loc[:, (condition_y, replicate_y)] + 1), 
                 s=1.5, c=data['phenotypes'].loc[:, (colorByPhenotype_condition,colorByPhenotype_replicate)],
-                cmap=yellow_blue, label='all sgRNAs')
+                cmap=yellow_blue, label='all sgRNAs',
+                     rasterized=True)
                 
             plt.colorbar(result)
     
     if showNegatives:
         axis.scatter(np.log2(data['counts'].loc[data['library']['gene'] == 'negative_control', (condition_x, replicate_x)] + 1), 
             np.log2(data['counts'].loc[data['library']['gene'] == 'negative_control', (condition_y, replicate_y)] + 1), 
-            s=1.5, c='#BFBFBF', label='non-targeting sgRNAs')
+            s=1.5, c='#BFBFBF', label='non-targeting sgRNAs',
+                     rasterized=True)
             
     if showGenes and len(showGenes) != 0:
         if isinstance(showGenes,str):
@@ -150,6 +158,54 @@ def countsScatter(data, condition_x = None, replicate_x = None,
     
     plt.tight_layout()
     displayFigure(fig, 'counts_scatter')
+    
+def premergedCountsScatterMatrix(data, condition=None, replicate=None):
+    if not checkOptions(data, 'counts', (condition,replicate)):
+        return
+
+    if 'premerged counts' not in data:
+        print 'Data must be loaded with premergedCounts = True'
+        return
+       
+    dataTable = data['premerged counts'].loc[:,(condition, replicate)]
+    dataColumns = dataTable.columns
+    if len(dataColumns) == 1:
+        print 'Only one counts file for {0}, {1}; no scatter matrix will be generated'.format(condition, replicate)
+        return
+        
+    
+    fig, axes = plt.subplots(len(dataColumns), len(dataColumns), figsize=(len(dataColumns)*2.5,len(dataColumns)*2.5))
+
+    for i, (name1, col1) in enumerate(dataTable.iteritems()):
+        name1 = '{0:.30}'.format(os.path.split(name1)[-1])
+        for j, (name2, col2) in enumerate(dataTable.iteritems()):
+            name2 = '{0:.30}'.format(os.path.split(name2)[-1])
+            if i < j:
+                cleanAxes(axes[i,j], top=False, bottom=False, left=False, right=False)
+                axes[i,j].xaxis.set_tick_params(top='off',bottom='off',labelbottom='off')
+                axes[i,j].yaxis.set_tick_params(left='off',right='off',labelleft='off')
+                
+            elif i == j:
+                axes[i,j].hist(np.log2(col2.dropna() + 1), bins=int(len(col2) ** .3), histtype='step', color=almost_black, lw=1)
+            
+                axes[i,j].set_xlabel(name2,fontsize=6)
+                axes[i,j].set_ylabel('# sgRNAs',fontsize=6)
+
+                axes[i,j].xaxis.set_tick_params(labelsize=6)
+                axes[i,j].yaxis.set_tick_params(labelsize=6)
+            else:
+                axes[i,j].scatter(np.log2(col2.dropna() + 1),np.log2(col1.dropna() + 1), s=2, c=almost_black, rasterized=True)
+
+                axes[i,j].set_xlabel(name2,fontsize=6)
+                axes[i,j].set_ylabel(name1,fontsize=6)
+
+                axes[i,j].xaxis.set_tick_params(labelsize=6)
+                axes[i,j].yaxis.set_tick_params(labelsize=6)
+        
+        
+    plt.tight_layout(pad=.05)
+    displayFigure(fig, 'premerged_counts_scatter')
+
 
 ##phenotype-level plotting functions
 #not yet implemented: counts vs phenotype
@@ -194,12 +250,14 @@ def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
     if showAll:
         axis.scatter(data['phenotypes'].loc[:, (phenotype_x, replicate_x)], 
             data['phenotypes'].loc[:, (phenotype_y, replicate_y)], 
-            s=1.5, c=almost_black, label='all sgRNAs')
+            s=1.5, c=almost_black, label='all sgRNAs',
+             rasterized=True)
     
     if showNegatives:
         axis.scatter(data['phenotypes'].loc[data['library']['gene'] == 'negative_control', (phenotype_x, replicate_x)], 
             data['phenotypes'].loc[data['library']['gene'] == 'negative_control', (phenotype_y, replicate_y)], 
-            s=1.5, c='#BFBFBF', label='non-targeting sgRNAs')
+            s=1.5, c='#BFBFBF', label='non-targeting sgRNAs',
+             rasterized=True)
             
     i=0
     if showGenes and len(showGenes) != 0:
@@ -213,7 +271,8 @@ def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
             else:
                 axis.scatter(data['phenotypes'].loc[data['library']['gene'] == gene, (phenotype_x, replicate_x)], 
                     data['phenotypes'].loc[data['library']['gene'] == gene, (phenotype_y, replicate_y)], 
-                    s=3, c=dark2[i], label=gene)
+                    s=3, c=dark2[i], label=gene,
+                     rasterized=True)
                     
     if showGeneSets and len(showGeneSets) != 0:
         if not isinstance(showGeneSets,dict) or not \
@@ -225,7 +284,8 @@ def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
                 sgsTargetingSet = data['library']['gene'].apply(lambda gene: gene in showGeneSets[gs])
                 axis.scatter(data['phenotypes'].loc[sgsTargetingSet, (phenotype_x, replicate_x)], 
                     data['phenotypes'].loc[sgsTargetingSet, (phenotype_y, replicate_y)], 
-                    s=3, c=dark2[i+j], label=gs)
+                    s=3, c=dark2[i+j], label=gs,
+                     rasterized=True)
                     
     plotGrid(axis)
                     
@@ -419,7 +479,7 @@ def getPvalueLabel(table):
         return pvalColLabels[0]
         
 def displayFigure(fig, savetitle=''):
-    if 'inline' in matplotlib.get_backend():
+    if plotWithPylab:
         fig.show()
         
     if plotDirectory != None:
@@ -429,7 +489,7 @@ def displayFigure(fig, savetitle=''):
         else:
             nextFigNum = max(figNums) + 1
 
-        fullTitle =  os.path.join(plotDirectory,'{0:03d}_fig_{1}.svg'.format(nextFigNum, savetitle))
+        fullTitle =  os.path.join(plotDirectory,'{0:03d}_fig_{1}.{2}'.format(nextFigNum, savetitle, imageExtension))
         print fullTitle
         fig.savefig(fullTitle, dpi=1000)
         
@@ -437,9 +497,16 @@ def displayFigure(fig, savetitle=''):
         print 'Must be in pylab and/or set a plot directory to display figures'
         plt.close(fig) 
         
-def setPlotDirectory(newDirectory):
+def changeDisplayFigureSettings(newDirectory=None, newImageExtension = 'svg', newPlotWithPylab = True):
     global plotDirectory
     plotDirectory = newDirectory
+    
+    global imageExtension
+    imageExtension = newImageExtension
+    
+    global plotWithPylab
+    plotWithPylab = newPlotWithPylab
+    
     
 def plotGrid(axis, vert_origin = True, horiz_origin=True, unity=True):
     ylim = axis.get_ylim()
@@ -476,10 +543,3 @@ def cleanAxes(axis, top=False, right=False, bottom=True, left=True):
         axis.yaxis.tick_left()
     if right:
         axis.yaxis.tick_right()
-
-# def rasteredScatter(series1,series2,label1,label2,outfilename):
-#     # print outfilename
-#     pass
-# 
-# def generateHistogram(series, label, outfilename):
-#     pass
