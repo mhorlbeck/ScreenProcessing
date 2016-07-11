@@ -9,6 +9,8 @@ import numpy as np
 import scipy as sp
 
 
+plotDirectory = None ##set to a directory to save figures 
+
 ##Matplotlib settings
 almost_black = '#111111'
 dark2 = ['#1b9e77',
@@ -42,8 +44,8 @@ plt.rcParams['patch.edgecolor'] = 'none'
 plt.rcParams['patch.linewidth'] = .25
 # plt.rcParams['patch.facecolor'] = dark2_all[0]
 
-# plt.rcParams['savefig.dpi']=1000
-# plt.rcParams['savefig.format'] = 'svg'
+plt.rcParams['savefig.dpi']=1000
+plt.rcParams['savefig.format'] = 'svg'
 
 plt.rcParams['legend.frameon'] = False
 plt.rcParams['legend.handletextpad'] = .25
@@ -89,7 +91,7 @@ def countsHistogram(data, condition=None, replicate=None):
     axis.set_ylabel('Number of sgRNAs')
     
     plt.tight_layout()
-    fig.show()
+    displayFigure(fig, 'counts_hist')
     
 def countsScatter(data, condition_x = None, replicate_x = None,
                         condition_y = None, replicate_y = None,
@@ -147,7 +149,7 @@ def countsScatter(data, condition_x = None, replicate_x = None,
     axis.set_ylabel('{0} {1} sgRNA read counts (log2)'.format(condition_y, replicate_y), fontsize=8)
     
     plt.tight_layout()
-    fig.show()
+    displayFigure(fig, 'counts_scatter')
 
 ##phenotype-level plotting functions
 #not yet implemented: counts vs phenotype
@@ -174,7 +176,7 @@ def phenotypeHistogram(data, phenotype=None, replicate=None):
     axis.set_ylabel('Number of sgRNAs')
     
     plt.tight_layout()
-    fig.show()
+    displayFigure(fig, 'phenotype_hist')
 
 def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
                         phenotype_y = None, replicate_y = None,
@@ -233,7 +235,7 @@ def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
     axis.set_ylabel('sgRNA {0} {1}'.format(phenotype_y, replicate_y), fontsize=8)
     
     plt.tight_layout()
-    fig.show()
+    displayFigure(fig, 'phenotype_scatter')
 
 ##gene-level plotting functions
 def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPseudo=True,
@@ -340,13 +342,13 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
     axis.set_xlim((xmin,xmax))
     axis.set_ylim((0,ymax))
 
-    axis.set_xlabel('gene gamma ({0})'.format(effectSizeLabel),fontsize=8)
+    axis.set_xlabel('{3} {0} {1} ({2})'.format(phenotype, replicate, effectSizeLabel, 'gene' if not transcripts else 'transcript'),fontsize=8)
     axis.set_ylabel('-log10 {0}'.format(pvalueLabel,fontsize=8))
     
     plt.legend(loc='best', fontsize=6, handletextpad=0.005)
 
     plt.tight_layout()
-    fig.show()
+    displayFigure(fig, 'volcano_plot')
 
 ##utility functions
 def checkOptions(data, graphType, optionTuple):
@@ -415,6 +417,29 @@ def getPvalueLabel(table):
         
     else:
         return pvalColLabels[0]
+        
+def displayFigure(fig, savetitle=''):
+    if 'inline' in matplotlib.get_backend():
+        fig.show()
+        
+    if plotDirectory != None:
+        figNums = [int(fileName.split('_fig_')[0]) for fileName in os.listdir(plotDirectory) if len(fileName.split('_fig_')) >= 2]
+        if len(figNums) == 0:
+            nextFigNum = 0
+        else:
+            nextFigNum = max(figNums) + 1
+
+        fullTitle =  os.path.join(plotDirectory,'{0:03d}_fig_{1}.svg'.format(nextFigNum, savetitle))
+        print fullTitle
+        fig.savefig(fullTitle, dpi=1000)
+        
+    if plotDirectory == None and 'inline' not in matplotlib.get_backend():
+        print 'Must be in pylab and/or set a plot directory to display figures'
+        plt.close(fig) 
+        
+def setPlotDirectory(newDirectory):
+    global plotDirectory
+    plotDirectory = newDirectory
     
 def plotGrid(axis, vert_origin = True, horiz_origin=True, unity=True):
     ylim = axis.get_ylim()
