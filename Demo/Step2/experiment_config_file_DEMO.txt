@@ -1,0 +1,161 @@
+#############################################################
+##                  Experiment Settings                    ##
+#############################################################
+[experiment_settings]
+
+output_folder = [path to Step2-counts_to_gene_scores]
+experiment_name = ctx_demo
+
+#############################################################
+##                    Library Settings                     ##
+#############################################################
+[library_settings]
+
+#currently CRISPRi_v1 or CRISPRa_v1
+
+library = CRISPRi_v1
+
+#If you are using all sublibraries you don't need to change anything
+#Otherwise, uncomment and edit a list from below:
+
+
+#CRISPRi_v1 sublibraries
+sublibraries =
+    Apoptosis+Cancer+Other_Cancer
+#    Drug_Targets+Kinase_Phosphatase
+#    Gene_Expression
+#    Membrane_Proteins
+#    Stress_Proteostasis
+#    Trafficking+Mitochondria+Motility
+#    Unassigned
+#    Essential_CRISPRi
+
+#CRISPRa_v1 sublibraries
+#sublibraries =
+#    Apoptosis+Cancer+Other_Cancer
+#    Drug_Targets+Kinase_Phosphatase
+#    Gene_Expression
+#    Membrane_Proteins
+#    Stress_Proteostasis
+#    Trafficking+Mitochondria+Motility
+#    Unassigned
+
+#############################################################
+##                      Counts Files                       ##
+#############################################################
+[counts_files]
+
+#Enter the paths to counts files from fastqgz_to_counts.py
+#followed by :condition|replicate_id
+#For example:
+#counts_file_string =
+#	/home/max/counts/Sample1_index6_CRISPRi.counts:treated|Rep1
+#	/home/max/counts/Sample1_index12_CRISPRi.counts:untreated|Rep1
+
+counts_file_string =
+	[index 10]:T0|Rep1
+	[index 3]:untreated|Rep1
+	[index 1]:treated|Rep1
+	[index 12]:T0|Rep2
+	[index 6]:untreated|Rep2
+	[index 14]:treated|Rep2
+	
+#############################################################
+##                     Filter Settings                     ##
+#############################################################
+[filter_settings]
+#Do you require greater than or equal to the minimum reads
+#for both experiments in a comparison or either experiment?
+#Default is either, other option is both
+filter_type = either
+minimum_reads = 50
+
+#############################################################
+##                     sgRNA Analysis                      ##
+#############################################################
+[sgrna_analysis]
+#Enter the condition(s) you want to compare
+#comparison_name:condition1:condition2
+#For example:
+#condition_string=
+#   gamma:T0:untreated
+#   rho:untreated:treated
+#   tau:T0:treated
+
+
+condition_string =
+	gamma:T0:untreated
+	rho:untreated:treated
+	tau:T0:treated
+
+#Different possible treatments for 0 values:
+#By default, for any comparison involving a 0, add 1 to both values,
+# leaving other values untouched
+#Can also add the pseudocount to all values, or filter out any 0s
+#'zeros only' or 'all values' or 'filter out'
+pseudocount_behavior = zeros only
+pseudocount = 1
+
+#############################################################
+##          Growth Values (phenotype scores only)          ##
+#############################################################
+[growth_values]
+#Enter the growth values (population doublings/doubling differences)
+#These values are used to normalize log2enrichments;
+#default to 1 (un-normalized) if log2e is desired
+
+#comparison_name:replicate_id:value
+#For example:
+#growth_value_string =
+#   rho:Rep1:7.13
+
+
+growth_value_string =
+	gamma:Rep2:11.1519761622
+	rho:Rep2:8.44158496881
+	tau:Rep2:2.7103911934
+	gamma:Rep1:10.7412001484
+	rho:Rep1:7.82935376641
+	tau:Rep1:2.9118463821
+	
+
+
+#############################################################
+##                      Gene Analysis                      ##
+#############################################################
+[gene_analysis]
+#True to combine sgRNAs by transcripts, False to combine by genes
+#If this is set to True and calculate_mw is set to True, 
+#the script will also generate a table of gene scores based on 
+#the transcript with the best Mann-Whitney p-value
+collapse_to_transcripts = True
+
+###Generates a distribution of negative control genes by randomly sampling
+#perform same metric calculations on this set
+#options are:
+#auto (match the pseudogenes with the targeting library table)
+#manual (Specify pseudogenes with the below settings)
+#off
+generate_pseudogene_dist = auto
+
+#sgRNAs/gene for your library
+#pseudogene_size = 10
+
+#approx number of genes in your library
+#num_pseudogenes = 16000
+
+###calculate_ave set to True to perform this analysis
+#Average of best n sgRNAs; -1 to take average of all
+#best is defined as largest phenotype by absolute value
+calculate_ave = True
+best_n = 3
+
+###Calculate Mann-Whitney p-values
+calculate_mw = True
+
+###Calculate Kolmorogov-Smirnov p-values
+#calculate_ks = False #NOT IMPLEMENTED
+
+###Score based on nth best sgRNA
+calculate_nth = False
+nth = 2

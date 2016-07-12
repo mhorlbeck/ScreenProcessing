@@ -1,0 +1,6 @@
+T0	Rep1	/Users/ipqb/Dropbox/IGI_workshop_files/Step2-counts_to_gene_scores/count_files/Demo_index10_full.counts	28158534
+T0	Rep2	/Users/ipqb/Dropbox/IGI_workshop_files/Step2-counts_to_gene_scores/count_files/Demo_index12_full.counts	30653900
+treated	Rep1	/Users/ipqb/Dropbox/IGI_workshop_files/Step2-counts_to_gene_scores/count_files/Demo_index1_full.counts	28067685
+treated	Rep2	/Users/ipqb/Dropbox/IGI_workshop_files/Step2-counts_to_gene_scores/count_files/Demo_index14_full.counts	28966269
+untreated	Rep1	/Users/ipqb/Dropbox/IGI_workshop_files/Step2-counts_to_gene_scores/count_files/Demo_index3_full.counts	31111541
+untreated	Rep2	/Users/ipqb/Dropbox/IGI_workshop_files/Step2-counts_to_gene_scores/count_files/Demo_index6_full.counts	29603701
