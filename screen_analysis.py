@@ -10,7 +10,7 @@ import scipy as sp
 
 
 plotDirectory = None ##set to a directory to save figures 
-imageExtension = 'svg'
+imageExtension = 'png'
 plotWithPylab = True ##call plt.show when figures are done
 
 ##Matplotlib settings
@@ -535,7 +535,7 @@ def displayFigure(fig, savetitle=''):
         
         plt.close(fig) 
         
-def changeDisplayFigureSettings(newDirectory=None, newImageExtension = 'svg', newPlotWithPylab = True):
+def changeDisplayFigureSettings(newDirectory=None, newImageExtension = 'png', newPlotWithPylab = True):
     global plotDirectory
     plotDirectory = newDirectory
     

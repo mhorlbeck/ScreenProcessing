@@ -18,7 +18,7 @@ defaultLibConfigName = 'library_config.txt'
 
 #a screen processing pipeline that requires just a config file and a directory of supported libraries
 #error checking in config parser is fairly robust, so not checking for input errors here
-def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots=True):
+def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='png'):
     #load in the supported libraries and sublibraries
     try:
         librariesToSublibraries, librariesToTables = parseLibraryConfig(os.path.join(libraryDirectory, defaultLibConfigName))
@@ -37,11 +37,11 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots=Tru
     makeDirectory(exptParameters['output_folder'])
     outbase = os.path.join(exptParameters['output_folder'],exptParameters['experiment_name'])
     
-    if generatePlots:
+    if generatePlots != 'off':
         plotDirectory = os.path.join(exptParameters['output_folder'],exptParameters['experiment_name'] + '_plots')
         makeDirectory(plotDirectory)
     
-        screen_analysis.changeDisplayFigureSettings(newDirectory=plotDirectory, newImageExtension = 'svg', newPlotWithPylab = False)
+        screen_analysis.changeDisplayFigureSettings(newDirectory=plotDirectory, newImageExtension = generatePlots, newPlotWithPylab = False)
     
 
     #load in library table and filter to requested sublibraries
@@ -84,7 +84,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots=Tru
     mergedCountsTable.to_csv(outbase + '_mergedcountstable.txt', sep='\t', tupleize_cols = False)
     mergedCountsTable.sum().to_csv(outbase + '_mergedcountstable_summary.txt', sep='\t')
     
-    if generatePlots and max(exptGroups.count().iloc[0]) > 1:
+    if generatePlots != 'off' and max(exptGroups.count().iloc[0]) > 1:
         printNow('-generating scatter plots of counts pre-merger')
     
         tempDataDict = {'library': libraryTable[sublibColumn],
@@ -97,7 +97,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots=Tru
             else:
                 screen_analysis.premergedCountsScatterMatrix(tempDataDict, phenotype, replicate)
 
-    if generatePlots:
+    if generatePlots != 'off':
         printNow('-generating sgRNA read count histograms')
     
         tempDataDict = {'library': libraryTable[sublibColumn],
@@ -127,7 +127,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots=Tru
 
             phenotypeScoreDict[(phenotype,replicate)] = score
     
-    if generatePlots:
+    if generatePlots  != 'off':
         tempDataDict = {'library': libraryTable[sublibColumn],
                         'counts': mergedCountsTable,
                         'phenotypes': pd.DataFrame(phenotypeScoreDict)}
@@ -153,7 +153,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots=Tru
     phenotypeTable = pd.DataFrame(phenotypeScoreDict)
     phenotypeTable.to_csv(outbase + '_phenotypetable.txt', sep='\t', tupleize_cols = False)
 
-    if len(replicateList) > 1 and generatePlots:
+    if len(replicateList) > 1 and generatePlots != 'off':
         tempDataDict = {'library': libraryTable[sublibColumn],
                         'phenotypes': phenotypeTable}
                     
@@ -248,7 +248,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots=Tru
             geneTableCollapsed = scoreGeneByBestTranscript(geneTable)
             geneTableCollapsed.to_csv(outbase + '_genetable_collapsed.txt',sep='\t', tupleize_cols = False)
     
-    if generatePlots:
+    if generatePlots != 'off':
         if 'calculate_ave' in exptParameters['analyses'] and 'calculate_mw' in exptParameters['analyses']:
             tempDataDict = {'library': libraryTable[sublibColumn],
                             'gene scores': geneTableCollapsed if exptParameters['collapse_to_transcripts'] else geneTable}
@@ -546,8 +546,10 @@ if __name__ == '__main__':
     parser.add_argument('Config_File', help='Experiment config file specifying screen analysis settings (see accomapnying BLANK and DEMO files).')
     parser.add_argument('Library_File_Directory', help='Directory containing reference library tables and the library_config.txt file.')
 
+    parser.add_argument('--plot_extension', default='png', help='Image extension for plot files, or \"off\". Default is png.')
+
     args = parser.parse_args()
     # print args
 
-    processExperimentsFromConfig(args.Config_File, args.Library_File_Directory)
+    processExperimentsFromConfig(args.Config_File, args.Library_File_Directory, args.plot_extension.lower())
 
