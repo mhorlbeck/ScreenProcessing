@@ -12,6 +12,7 @@ import scipy as sp
 plotDirectory = None ##set to a directory to save figures 
 imageExtension = 'png'
 plotWithPylab = True ##call plt.show when figures are done
+figureScale = 1
 
 ##Matplotlib settings
 almost_black = '#111111'
@@ -84,7 +85,7 @@ def countsHistogram(data, condition=None, replicate=None):
     if not checkOptions(data, 'counts', (condition,replicate)):
         return
         
-    fig, axis = plt.subplots(figsize=(3.5,2.5))
+    fig, axis = plt.subplots(figsize=(3.5*figureScale,2.5*figureScale))
     cleanAxes(axis)
     
     axis.semilogy()
@@ -106,7 +107,7 @@ def countsHistogram(data, condition=None, replicate=None):
     axis.set_ylabel('Number of sgRNAs')
     
     plt.tight_layout()
-    displayFigure(fig, 'counts_hist')
+    return displayFigure(fig, 'counts_hist')
     
 def countsScatter(data, condition_x = None, replicate_x = None,
                         condition_y = None, replicate_y = None,
@@ -121,7 +122,7 @@ def countsScatter(data, condition_x = None, replicate_x = None,
         and not checkOptions(data, 'phenotypes', (colorByPhenotype_condition,colorByPhenotype_replicate)):
         return 
         
-    fig, axis = plt.subplots(figsize=(3,3))
+    fig, axis = plt.subplots(figsize=(3*figureScale,3*figureScale))
     cleanAxes(axis)
     
     if showAll:
@@ -167,7 +168,7 @@ def countsScatter(data, condition_x = None, replicate_x = None,
     axis.set_ylabel('{0} {1} sgRNA read counts (log2)'.format(condition_y, replicate_y), fontsize=8)
     
     plt.tight_layout()
-    displayFigure(fig, 'counts_scatter')
+    return displayFigure(fig, 'counts_scatter')
     
 def premergedCountsScatterMatrix(data, condition=None, replicate=None):
     if not checkOptions(data, 'counts', (condition,replicate)):
@@ -214,7 +215,7 @@ def premergedCountsScatterMatrix(data, condition=None, replicate=None):
         
         
     plt.tight_layout(pad=.05)
-    displayFigure(fig, 'premerged_counts_scatter')
+    return displayFigure(fig, 'premerged_counts_scatter')
 
 
 ##phenotype-level plotting functions
@@ -224,7 +225,7 @@ def phenotypeHistogram(data, phenotype=None, replicate=None):
     if not checkOptions(data, 'phenotypes', (phenotype,replicate)):
         return
         
-    fig, axis = plt.subplots(figsize=(3.5,2.5))
+    fig, axis = plt.subplots(figsize=(3.5*figureScale,2.5*figureScale))
     cleanAxes(axis)
     
     axis.semilogy()
@@ -242,7 +243,7 @@ def phenotypeHistogram(data, phenotype=None, replicate=None):
     axis.set_ylabel('Number of sgRNAs')
     
     plt.tight_layout()
-    displayFigure(fig, 'phenotype_hist')
+    return displayFigure(fig, 'phenotype_hist')
 
 def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
                         phenotype_y = None, replicate_y = None,
@@ -254,7 +255,7 @@ def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
     if not checkOptions(data, 'phenotypes', (phenotype_y,replicate_y)):
         return
         
-    fig, axis = plt.subplots(figsize=(3,3))
+    fig, axis = plt.subplots(figsize=(3*figureScale,3*figureScale))
     cleanAxes(axis)
     
     if showAll:
@@ -305,13 +306,13 @@ def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
     axis.set_ylabel('sgRNA {0} {1}'.format(phenotype_y, replicate_y), fontsize=8)
     
     plt.tight_layout()
-    displayFigure(fig, 'phenotype_scatter')
+    return displayFigure(fig, 'phenotype_scatter')
 
 def sgRNAsPassingFilterHist(data, phenotype, replicate, transcripts=False):
     if not checkOptions(data, 'phenotypes', (phenotype,replicate)):
         return
         
-    fig, axis = plt.subplots(figsize=(3.5,2.5))
+    fig, axis = plt.subplots(figsize=(3.5*figureScale,2.5*figureScale))
     cleanAxes(axis)
     
     axis.semilogy()
@@ -331,7 +332,7 @@ def sgRNAsPassingFilterHist(data, phenotype, replicate, transcripts=False):
     axis.set_ylabel('Number of sgRNAs')
     
     plt.tight_layout()
-    displayFigure(fig, 'sgRNAs_passing_filter_hist')
+    return displayFigure(fig, 'sgRNAs_passing_filter_hist')
     
 ##gene-level plotting functions
 def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPseudo=True,
@@ -370,7 +371,7 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
     yGenes = -1*np.log10(table[pvalueLabel])
     xGenes = table[effectSizeLabel]
 
-    fig, axis = plt.subplots(1,1, figsize=(4,3.5))
+    fig, axis = plt.subplots(1,1, figsize=(4*figureScale,3.5*figureScale))
     cleanAxes(axis)
 
     axis.scatter(table.loc[isPseudo.ne(True)].loc[table['thresh'],effectSizeLabel], -1*np.log10(table.loc[isPseudo.ne(True)].loc[table['thresh'],pvalueLabel].values),
@@ -444,7 +445,7 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
     plt.legend(loc='best', fontsize=6, handletextpad=0.005)
 
     plt.tight_layout()
-    displayFigure(fig, 'volcano_plot')
+    return displayFigure(fig, 'volcano_plot')
 
 ##utility functions
 def checkOptions(data, graphType, optionTuple):
@@ -530,12 +531,14 @@ def displayFigure(fig, savetitle=''):
         fig.savefig(fullTitle, dpi=1000)
         plt.close(fig) 
         
+        return fullTitle
+        
     if plotDirectory == None and not plotWithPylab:
         print 'Must be in pylab and/or set a plot directory to display figures'
         
         plt.close(fig) 
         
-def changeDisplayFigureSettings(newDirectory=None, newImageExtension = 'png', newPlotWithPylab = True):
+def changeDisplayFigureSettings(newDirectory=None, newImageExtension = 'png', newPlotWithPylab = True, newFigureScale = 1):
     global plotDirectory
     plotDirectory = newDirectory
     
@@ -545,6 +548,8 @@ def changeDisplayFigureSettings(newDirectory=None, newImageExtension = 'png', ne
     global plotWithPylab
     plotWithPylab = newPlotWithPylab
     
+    global figureScale
+    figureScale = newFigureScale
     
 def plotGrid(axis, vert_origin = True, horiz_origin=True, unity=True):
     ylim = axis.get_ylim()

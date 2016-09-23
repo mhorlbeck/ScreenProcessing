@@ -20,3 +20,75 @@ sublibraries =
     Stress_Proteostasis
     Trafficking+Mitochondria+Motility
     Unassigned
+
+[CRISPRi_v2_human]
+filename = CRISPRi_v2_human_librarytable.txt
+sublibraries =
+	h1_Top5
+	h2_Top5
+	h3_Top5
+	h4_Top5
+	h5_Top5
+	h6_Top5
+	h7_Top5
+	h1_Supp5
+	h2_Supp5
+	h3_Supp5
+	h4_Supp5
+	h5_Supp5
+	h6_Supp5
+	h7_Supp5
+
+[CRISPRa_v2_human]
+filename = CRISPRa_v2_human_librarytable.txt
+sublibraries =
+	h1_Top5
+	h2_Top5
+	h3_Top5
+	h4_Top5
+	h5_Top5
+	h6_Top5
+	h7_Top5
+	h1_Supp5
+	h2_Supp5
+	h3_Supp5
+	h4_Supp5
+	h5_Supp5
+	h6_Supp5
+	h7_Supp5
+
+[CRISPRi_v2_mouse]
+filename = CRISPRi_v2_mouse_librarytable.txt
+sublibraries =
+	m1_Top5
+	m2_Top5
+	m3_Top5
+	m4_Top5
+	m5_Top5
+	m6_Top5
+	m7_Top5
+	m1_Supp5
+	m2_Supp5
+	m3_Supp5
+	m4_Supp5
+	m5_Supp5
+	m6_Supp5
+	m7_Supp5
+
+[CRISPRa_v2_mouse]
+filename = CRISPRa_v2_mouse_librarytable.txt
+sublibraries =
+	m1_Top5
+	m2_Top5
+	m3_Top5
+	m4_Top5
+	m5_Top5
+	m6_Top5
+	m7_Top5
+	m1_Supp5
+	m2_Supp5
+	m3_Supp5
+	m4_Supp5
+	m5_Supp5
+	m6_Supp5
+	m7_Supp5
