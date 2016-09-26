@@ -17,7 +17,7 @@
 
     This script also generates a set of standard graphs using **screen_analysis.py**
 
-3. Generate graphs interactively using **screen_analysis.py**
+3. [Optional] Generate graphs interactively using **screen_analysis.py**
 
 ###Dependencies
 * Python v2.7
