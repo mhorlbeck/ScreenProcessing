@@ -54,7 +54,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
         print 'After limiting analysis to specified sublibraries, no elements are left'
         return
 
-    libraryTable[sublibColumn].to_csv(outbase + '_librarytable.txt', sep='\t', tupelize_cols = False)
+    libraryTable[sublibColumn].to_csv(outbase + '_librarytable.txt', sep='\t', tupleize_cols = False)
 
     #load in counts, create table of total counts in each and each file as a column
     printNow('Loading counts data')
@@ -88,7 +88,8 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
         printNow('-generating scatter plots of counts pre-merger')
     
         tempDataDict = {'library': libraryTable[sublibColumn],
-                        'premerged counts': countsTable}
+                        'premerged counts': countsTable,
+                       'counts': mergedCountsTable}
 
         for (phenotype, replicate), countsCols in exptGroups:
             if len(countsCols.columns) == 1:
