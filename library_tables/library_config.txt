@@ -92,3 +92,20 @@ sublibraries =
 	m5_Supp5
 	m6_Supp5
 	m7_Supp5
+
+[CRiNCL_human]
+filename = CRiNCL_human_librarytable.txt
+sublibraries =
+       cancer_common
+       common
+       hek_unique
+       hela_unique
+       hff_ips
+       hff_unique
+       ips_unique
+       k562_hela
+       k562_hela_mcf7
+       k562_unique
+       mcf7_unique
+       u87_hek
+       u87_unique
