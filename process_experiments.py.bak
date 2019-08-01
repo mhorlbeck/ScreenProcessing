@@ -23,7 +23,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
     try:
         librariesToSublibraries, librariesToTables = parseLibraryConfig(os.path.join(libraryDirectory, defaultLibConfigName))
     except ValueError as err:
-        print((' '.join(err.args)))
+        print(' '.join(err.args))
         return
 
     exptParameters, parseStatus, parseString = parseExptConfig(configFile, librariesToSublibraries)
@@ -104,15 +104,15 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
         tempDataDict = {'library': libraryTable[sublibColumn],
                         'counts': mergedCountsTable}
                     
-        for (phenotype, replicate), countsCol in mergedCountsTable.items():
+        for (phenotype, replicate), countsCol in mergedCountsTable.iteritems():
             screen_analysis.countsHistogram(tempDataDict, phenotype, replicate)
     
     #create pairs of columns for each comparison, filter to na, then generate sgRNA phenotype score
     printNow('Computing sgRNA phenotype scores')
 
     growthValueDict = {(tup[0],tup[1]):tup[2] for tup in exptParameters['growth_value_tuples']}
-    phenotypeList = list(set(list(zip(*exptParameters['condition_tuples']))[0]))
-    replicateList = sorted(list(set(list(zip(*exptParameters['counts_file_list']))[1])))
+    phenotypeList = list(set(zip(*exptParameters['condition_tuples'])[0]))
+    replicateList = sorted(list(set(zip(*exptParameters['counts_file_list'])[1])))
 
     phenotypeScoreDict = dict()
     for (phenotype, condition1, condition2) in exptParameters['condition_tuples']:
@@ -148,7 +148,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
         printNow('Averaging replicates')
 
         for phenotype in phenotypeList:
-            repCols = pd.DataFrame({(phen,rep):col for (phen,rep), col in phenotypeScoreDict.items() if phen == phenotype})
+            repCols = pd.DataFrame({(phen,rep):col for (phen,rep), col in phenotypeScoreDict.iteritems() if phen == phenotype})
             phenotypeScoreDict[(phenotype,'ave_' + '_'.join(replicateList))] = repCols.mean(axis=1,skipna=False) #average nan and real to nan; otherwise this could lead to data points with just one rep informing results
 
     phenotypeTable = pd.DataFrame(phenotypeScoreDict)
@@ -161,11 +161,11 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
         printNow('-generating replicate phenotype histograms and scatter plots')
     
         for phenotype, phengroup in phenotypeTable.groupby(level=0, axis=1):
-            for i, ((p, rep1), col1) in enumerate(phengroup.items()):
+            for i, ((p, rep1), col1) in enumerate(phengroup.iteritems()):
                 if rep1[:4] == 'ave_':
                     screen_analysis.phenotypeHistogram(tempDataDict, phenotype, rep1)
             
-                for j, ((p, rep2), col2) in enumerate(phengroup.items()):
+                for j, ((p, rep2), col2) in enumerate(phengroup.iteritems()):
                     if rep2[:4] == 'ave_' or j<=i:
                         continue
                     
@@ -233,7 +233,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
 
         analysisTables = []
         for analysis in exptParameters['analyses']:
-            print(('--' + analysis))
+            print('--' + analysis)
             sys.stdout.flush()
 
             analysisTables.append(applyGeneScoreFunction(geneGroups, negTable, analysis, exptParameters['analyses'][analysis]))
@@ -268,9 +268,9 @@ def scoreGeneByBestTranscript(geneTable):
 
     tupList = []
     bestTransList = []
-    for tup, group in geneTable.groupby(level=list(range(2)),axis=1):
+    for tup, group in geneTable.groupby(level=range(2),axis=1):
         tupList.append(tup)
-        curFrame = geneTable.loc[list(zip(bestTranscriptFrame.index,bestTranscriptFrame[tup])),tup]
+        curFrame = geneTable.loc[zip(bestTranscriptFrame.index,bestTranscriptFrame[tup]),tup]
         bestTransList.append(curFrame.reset_index().set_index('gene'))
 
     return pd.concat(bestTransList, axis=1, keys=tupList)
@@ -301,7 +301,7 @@ def readLibraryFile(libraryFastaFileName, elementTypeFunc, geneNameFunc, miscFun
             
             idLine = infile.readline()
 
-    elementIds, elementSeqs = list(zip(*elementList))
+    elementIds, elementSeqs = zip(*elementList)
     libraryTable = pd.DataFrame(np.array(elementSeqs), index=np.array(elementIds), columns=['aligned_seq'], dtype='object')
 
     libraryTable['element_type'] = elementTypeFunc(libraryTable)
@@ -324,7 +324,7 @@ def printCountsFilePaths(baseDirectoryPathList):
     for basePath in baseDirectoryPathList:
         for root, dirs, filenames in os.walk(basePath):
             for filename in fnmatch.filter(filenames,'*.counts'):
-                print(os.path.join(root, filename))
+                print os.path.join(root, filename)
 
 def mergeCountsForExperiments(experimentFileName, libraryTable):
     exptTable = pd.read_csv(experimentFileName, delimiter='\t')
@@ -386,7 +386,7 @@ def filterCountsPerExperiment(min_reads, exptsTable,libraryTable):
         experimentGroups.append(exptDfFiltered)
         
         print(expt)
-        print((len(exptDfUnderMin[exptDfUnderMin == True])))
+        print(len(exptDfUnderMin[exptDfUnderMin == True]))
 
     resultTable = pd.concat(experimentGroups, axis = 1).align(libraryTable, axis=0)[0]
 
