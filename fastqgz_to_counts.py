@@ -132,7 +132,7 @@ def parseSeqFileNames(fileNameList):
 
 	for inputFileName in fileNameList:					#iterate through entered filenames for sequence files
 		for filename in glob.glob(inputFileName): 		#generate all possible files given wildcards
-			for fileType in zip(*acceptedFileTypes)[0]:	#iterate through allowed filetypes
+			for fileType in list(zip(*acceptedFileTypes))[0]:	#iterate through allowed filetypes
 				if fnmatch.fnmatch(filename,fileType):
 					infileList.append(filename)
 					outfileBaseList.append(os.path.split(filename)[-1].split('.')[0])

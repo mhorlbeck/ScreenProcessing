@@ -47,14 +47,14 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
     #load in library table and filter to requested sublibraries
     printNow('Accessing library information')
 
-    libraryTable = pd.read_csv(os.path.join(libraryDirectory, librariesToTables[exptParameters['library']]), sep = '\t', tupleize_cols=False, header=0, index_col=0).sort_index()
+    libraryTable = pd.read_csv(os.path.join(libraryDirectory, librariesToTables[exptParameters['library']]), sep = '\t', header=0, index_col=0).sort_index()
     sublibColumn = libraryTable.apply(lambda row: row['sublibrary'].lower() in exptParameters['sublibraries'], axis=1)
 
     if sum(sublibColumn) == 0:
         print('After limiting analysis to specified sublibraries, no elements are left')
         return
 
-    libraryTable[sublibColumn].to_csv(outbase + '_librarytable.txt', sep='\t', tupleize_cols = False)
+    libraryTable[sublibColumn].to_csv(outbase + '_librarytable.txt', sep='\t')
 
     #load in counts, create table of total counts in each and each file as a column
     printNow('Loading counts data')
@@ -72,7 +72,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
 
     # print columnDict
     countsTable = pd.DataFrame(columnDict)#, index=libraryTable[sublibColumn].index)
-    countsTable.to_csv(outbase + '_rawcountstable.txt', sep='\t', tupleize_cols = False)
+    countsTable.to_csv(outbase + '_rawcountstable.txt', sep='\t')
     countsTable.sum().to_csv(outbase + '_rawcountstable_summary.txt', sep='\t')
 
     #merge counts for same conditions/replicates, and create summary table
@@ -81,7 +81,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
     
     exptGroups = countsTable.groupby(level=[0,1], axis=1)
     mergedCountsTable = exptGroups.aggregate(np.sum)
-    mergedCountsTable.to_csv(outbase + '_mergedcountstable.txt', sep='\t', tupleize_cols = False)
+    mergedCountsTable.to_csv(outbase + '_mergedcountstable.txt', sep='\t')
     mergedCountsTable.sum().to_csv(outbase + '_mergedcountstable_summary.txt', sep='\t')
     
     if generatePlots != 'off' and max(exptGroups.count().iloc[0]) > 1:
@@ -152,7 +152,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
             phenotypeScoreDict[(phenotype,'ave_' + '_'.join(replicateList))] = repCols.mean(axis=1,skipna=False) #average nan and real to nan; otherwise this could lead to data points with just one rep informing results
 
     phenotypeTable = pd.DataFrame(phenotypeScoreDict)
-    phenotypeTable.to_csv(outbase + '_phenotypetable.txt', sep='\t', tupleize_cols = False)
+    phenotypeTable.to_csv(outbase + '_phenotypetable.txt', sep='\t')
 
     if len(replicateList) > 1 and generatePlots != 'off':
         tempDataDict = {'library': libraryTable[sublibColumn],
@@ -239,7 +239,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
             analysisTables.append(applyGeneScoreFunction(geneGroups, negTable, analysis, exptParameters['analyses'][analysis]))
 
         geneTable = pd.concat(analysisTables, axis=1).reorder_levels([1,2,0],axis=1).sort_index(axis=1)
-        geneTable.to_csv(outbase + '_genetable.txt',sep='\t', tupleize_cols = False)
+        geneTable.to_csv(outbase + '_genetable.txt',sep='\t')
 
         ### collapse the gene-transcript indices into a single score for a gene by best MW p-value, where applicable
         if exptParameters['collapse_to_transcripts'] == True and 'calculate_mw' in exptParameters['analyses']:
@@ -247,7 +247,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
             sys.stdout.flush()
 
             geneTableCollapsed = scoreGeneByBestTranscript(geneTable)
-            geneTableCollapsed.to_csv(outbase + '_genetable_collapsed.txt',sep='\t', tupleize_cols = False)
+            geneTableCollapsed.to_csv(outbase + '_genetable_collapsed.txt',sep='\t')
     
     if generatePlots != 'off':
         if 'calculate_ave' in exptParameters['analyses'] and 'calculate_mw' in exptParameters['analyses']:
