@@ -1,4 +1,4 @@
-from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 import os
 import fnmatch
 
@@ -132,7 +132,7 @@ def parseExptConfig(configFile, librariesToSublibrariesDict):
         paramDict['condition_tuples'] = []
         
         if 'counts_file_list' in paramDict:
-            expectedConditions = set(zip(*paramDict['counts_file_list'])[0])
+            expectedConditions = set(list(zip(*paramDict['counts_file_list']))[0])
         else:
             expectedConditions = []
 
@@ -192,8 +192,8 @@ def parseExptConfig(configFile, librariesToSublibrariesDict):
         growthValueString = parser.get('growth_values','growth_value_string').strip()
 
         if 'condition_tuples' in paramDict and 'counts_file_list' in paramDict:
-            expectedComparisons = set(zip(*paramDict['condition_tuples'])[0])
-            expectedReplicates = set(zip(*paramDict['counts_file_list'])[1])
+            expectedComparisons = set(list(zip(*paramDict['condition_tuples']))[0])
+            expectedReplicates = set(list(zip(*paramDict['counts_file_list']))[1])
 
             expectedTupleList = []
 

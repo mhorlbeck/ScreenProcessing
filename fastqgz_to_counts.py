@@ -15,12 +15,12 @@ def parallelSeqFileToCountsParallel(fastqGzFileNameList, fastaFileNameList, coun
 	if len(fastqGzFileNameList) != len(fastaFileNameList):
 		raise ValueError('In and out file lists must be the same length')
 
-	arglist = zip(fastqGzFileNameList, fastaFileNameList, countFileNameList, [libraryFasta]*len(fastaFileNameList), 
-                  [startIndex]*len(fastaFileNameList),[stopIndex]*len(fastaFileNameList), [test]*len(fastaFileNameList))
+	arglist = list(zip(fastqGzFileNameList, fastaFileNameList, countFileNameList, [libraryFasta]*len(fastaFileNameList), 
+                  [startIndex]*len(fastaFileNameList),[stopIndex]*len(fastaFileNameList), [test]*len(fastaFileNameList)))
 	
 	readsPerFile = processPool.map(seqFileToCountsWrapper, arglist)
 
-	return zip(countFileNameList,readsPerFile)
+	return list(zip(countFileNameList,readsPerFile))
 
 
 def seqFileToCountsWrapper(arg):
@@ -82,7 +82,7 @@ def seqFileToCounts(infileName, fastaFileName, countFileName, libraryFasta, star
 					break
 
 	with open(countFileName,'w') as countFile:
-		for countTup in (sorted(zip(idsToReadcountDict.keys(), idsToReadcountDict.values()))):
+		for countTup in (sorted(zip(list(idsToReadcountDict.keys()), list(idsToReadcountDict.values())))):
 			countFile.write('%s\t%d\n' % countTup)
 
 	printNow('Done processing %s' % infileName)
@@ -119,7 +119,7 @@ def parseLibraryFasta(libraryFasta):
 	if len(seqToIds) == 0 or len(idsToReadcounts) == 0 or readLengths[0] == 0:
 		raise ValueError('library fasta could not be parsed or contains no sequences')
 	elif max(readLengths) != min(readLengths):
-		print min(readLengths), max(readLengths)
+		print(min(readLengths), max(readLengths))
 		raise ValueError('library reference sequences are of inconsistent lengths')
 
 	return seqToIds, idsToReadcounts, readLengths[0]
@@ -132,7 +132,7 @@ def parseSeqFileNames(fileNameList):
 
 	for inputFileName in fileNameList:					#iterate through entered filenames for sequence files
 		for filename in glob.glob(inputFileName): 		#generate all possible files given wildcards
-			for fileType in zip(*acceptedFileTypes)[0]:	#iterate through allowed filetypes
+			for fileType in list(zip(*acceptedFileTypes))[0]:	#iterate through allowed filetypes
 				if fnmatch.fnmatch(filename,fileType):
 					infileList.append(filename)
 					outfileBaseList.append(os.path.split(filename)[-1].split('.')[0])
@@ -147,7 +147,7 @@ def makeDirectory(path):
 		pass
 
 def printNow(printInput):
-	print printInput
+	print(printInput)
 	sys.stdout.flush()
 
 ### Global variables ###
@@ -213,7 +213,7 @@ if __name__ == '__main__':
 		sys.exit('Error while processing sequencing files: ' + ' '.join(err.args))
 		
 	for filename, result in resultList:
-		print filename + ':\n\t%.2E reads\t%.2E aligning (%.2f%%)' % result
+		print(filename + ':\n\t%.2E reads\t%.2E aligning (%.2f%%)' % result)
 	
 	pool.close()
 	pool.join()
