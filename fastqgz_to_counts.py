@@ -57,7 +57,7 @@ def seqFileToCounts(infileName, fastaFileName, countFileName, libraryFasta, star
 
 	with open(fastaFileName,'w') as unalignedFile:
 		for i, fastqLine in enumerate(infile):
-			if i % 4 != 1:
+			if i % linesPerRead != 1:
 				continue
 
 			else:
