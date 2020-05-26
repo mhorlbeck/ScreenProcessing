@@ -1,11 +1,11 @@
-from configparser import ConfigParser
+from ConfigParser import SafeConfigParser
 import os
 import fnmatch
 
 #Parse and validate the input of an experiment config file
 #output a dict with all of the parameters needed to process experiments
 def parseExptConfig(configFile, librariesToSublibrariesDict):
-    parser = ConfigParser()
+    parser = SafeConfigParser()
     results = parser.read(configFile)
     if len(results) == 0:
         return None, 1, 'Experiment config file not found'
@@ -132,7 +132,7 @@ def parseExptConfig(configFile, librariesToSublibrariesDict):
         paramDict['condition_tuples'] = []
         
         if 'counts_file_list' in paramDict:
-            expectedConditions = set(list(zip(*paramDict['counts_file_list']))[0])
+            expectedConditions = set(zip(*paramDict['counts_file_list'])[0])
         else:
             expectedConditions = []
 
@@ -192,8 +192,8 @@ def parseExptConfig(configFile, librariesToSublibrariesDict):
         growthValueString = parser.get('growth_values','growth_value_string').strip()
 
         if 'condition_tuples' in paramDict and 'counts_file_list' in paramDict:
-            expectedComparisons = set(list(zip(*paramDict['condition_tuples']))[0])
-            expectedReplicates = set(list(zip(*paramDict['counts_file_list']))[1])
+            expectedComparisons = set(zip(*paramDict['condition_tuples'])[0])
+            expectedReplicates = set(zip(*paramDict['counts_file_list'])[1])
 
             expectedTupleList = []
 
@@ -255,8 +255,8 @@ def parseExptConfig(configFile, librariesToSublibrariesDict):
         paramDict['growth_value_tuples'] = []
         
         if 'condition_tuples' in paramDict and 'counts_file_list' in paramDict:
-            expectedComparisons = set(list(zip(*paramDict['condition_tuples']))[0])
-            expectedReplicates = set(list(zip(*paramDict['counts_file_list']))[1])
+            expectedComparisons = set(zip(*paramDict['condition_tuples'])[0])
+            expectedReplicates = set(zip(*paramDict['counts_file_list'])[1])
 
             for comp in expectedComparisons:
                 for rep in expectedReplicates:
@@ -372,7 +372,7 @@ def parseExptConfig(configFile, librariesToSublibrariesDict):
     
 #Parse the library configuration file to get the available libraries, sublibraries, and corresponding library table files
 def parseLibraryConfig(libConfigFile):
-    parser = ConfigParser()
+    parser = SafeConfigParser()
     result = parser.read(libConfigFile)
     if len(result) == 0:
         raise ValueError('Library config file not found')

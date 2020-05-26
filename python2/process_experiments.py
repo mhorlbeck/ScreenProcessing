@@ -23,7 +23,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
     try:
         librariesToSublibraries, librariesToTables = parseLibraryConfig(os.path.join(libraryDirectory, defaultLibConfigName))
     except ValueError as err:
-        print(' '.join(err.args))
+        print ' '.join(err.args)
         return
 
     exptParameters, parseStatus, parseString = parseExptConfig(configFile, librariesToSublibraries)
@@ -31,7 +31,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
     printNow(parseString)
 
     if parseStatus > 0: #Critical errors in parsing
-        print('Exiting due to experiment config file errors\n')
+        print 'Exiting due to experiment config file errors\n'
         return
 
     makeDirectory(exptParameters['output_folder'])
@@ -47,14 +47,14 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
     #load in library table and filter to requested sublibraries
     printNow('Accessing library information')
 
-    libraryTable = pd.read_csv(os.path.join(libraryDirectory, librariesToTables[exptParameters['library']]), sep = '\t', header=0, index_col=0).sort_index()
+    libraryTable = pd.read_csv(os.path.join(libraryDirectory, librariesToTables[exptParameters['library']]), sep = '\t', tupleize_cols=False, header=0, index_col=0).sort_index()
     sublibColumn = libraryTable.apply(lambda row: row['sublibrary'].lower() in exptParameters['sublibraries'], axis=1)
 
     if sum(sublibColumn) == 0:
-        print('After limiting analysis to specified sublibraries, no elements are left')
+        print 'After limiting analysis to specified sublibraries, no elements are left'
         return
 
-    libraryTable[sublibColumn].to_csv(outbase + '_librarytable.txt', sep='\t')
+    libraryTable[sublibColumn].to_csv(outbase + '_librarytable.txt', sep='\t', tupleize_cols = False)
 
     #load in counts, create table of total counts in each and each file as a column
     printNow('Loading counts data')
@@ -62,7 +62,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
     columnDict = dict()
     for tup in sorted(exptParameters['counts_file_list']):
         if tup in columnDict:
-            print('Asserting that tuples of condition, replicate, and count file should be unique; are the cases where this should not be enforced?')
+            print 'Asserting that tuples of condition, replicate, and count file should be unique; are the cases where this should not be enforced?'
             raise Exception('condition, replicate, and count file combination already assigned')
         
         countSeries = readCountsFile(tup[2]).reset_index().drop_duplicates('id').set_index('id') #for now also dropping duplicate ids in counts for overlapping linc sublibraries
@@ -72,8 +72,8 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
 
     # print columnDict
     countsTable = pd.DataFrame(columnDict)#, index=libraryTable[sublibColumn].index)
-    countsTable.to_csv(outbase + '_rawcountstable.txt', sep='\t')
-    countsTable.sum().to_csv(outbase + '_rawcountstable_summary.txt', sep='\t',header=False)
+    countsTable.to_csv(outbase + '_rawcountstable.txt', sep='\t', tupleize_cols = False)
+    countsTable.sum().to_csv(outbase + '_rawcountstable_summary.txt', sep='\t')
 
     #merge counts for same conditions/replicates, and create summary table
     #save scatter plot before each merger, and histogram of counts post mergers
@@ -81,8 +81,8 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
     
     exptGroups = countsTable.groupby(level=[0,1], axis=1)
     mergedCountsTable = exptGroups.aggregate(np.sum)
-    mergedCountsTable.to_csv(outbase + '_mergedcountstable.txt', sep='\t')
-    mergedCountsTable.sum().to_csv(outbase + '_mergedcountstable_summary.txt', sep='\t',header=False)
+    mergedCountsTable.to_csv(outbase + '_mergedcountstable.txt', sep='\t', tupleize_cols = False)
+    mergedCountsTable.sum().to_csv(outbase + '_mergedcountstable_summary.txt', sep='\t')
     
     if generatePlots != 'off' and max(exptGroups.count().iloc[0]) > 1:
         printNow('-generating scatter plots of counts pre-merger')
@@ -111,20 +111,20 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
     printNow('Computing sgRNA phenotype scores')
 
     growthValueDict = {(tup[0],tup[1]):tup[2] for tup in exptParameters['growth_value_tuples']}
-    phenotypeList = list(set(list(zip(*exptParameters['condition_tuples']))[0]))
-    replicateList = sorted(list(set(list(zip(*exptParameters['counts_file_list']))[1])))
+    phenotypeList = list(set(zip(*exptParameters['condition_tuples'])[0]))
+    replicateList = sorted(list(set(zip(*exptParameters['counts_file_list'])[1])))
 
     phenotypeScoreDict = dict()
     for (phenotype, condition1, condition2) in exptParameters['condition_tuples']:
         for replicate in replicateList:
             column1 = mergedCountsTable[(condition1,replicate)]
             column2 = mergedCountsTable[(condition2,replicate)]
-            filtCols = filterLowCounts(pd.concat((column1, column2), axis = 1, sort=True), exptParameters['filter_type'], exptParameters['minimum_reads'])
+            filtCols = filterLowCounts(pd.concat((column1, column2), axis = 1), exptParameters['filter_type'], exptParameters['minimum_reads'])
             
 
             score = computePhenotypeScore(filtCols[(condition1, replicate)], filtCols[(condition2,replicate)], 
-                                            libraryTable[sublibColumn], growthValueDict[(phenotype,replicate)], 
-                                            exptParameters['pseudocount_behavior'], exptParameters['pseudocount'])
+                libraryTable[sublibColumn], growthValueDict[(phenotype,replicate)], 
+                exptParameters['pseudocount_behavior'], exptParameters['pseudocount'])
 
             phenotypeScoreDict[(phenotype,replicate)] = score
     
@@ -148,11 +148,11 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
         printNow('Averaging replicates')
 
         for phenotype in phenotypeList:
-            repCols = pd.DataFrame({(phen,rep):col for (phen,rep), col in phenotypeScoreDict.items() if phen == phenotype})
+            repCols = pd.DataFrame({(phen,rep):col for (phen,rep), col in phenotypeScoreDict.iteritems() if phen == phenotype})
             phenotypeScoreDict[(phenotype,'ave_' + '_'.join(replicateList))] = repCols.mean(axis=1,skipna=False) #average nan and real to nan; otherwise this could lead to data points with just one rep informing results
 
-    phenotypeTable = pd.DataFrame(phenotypeScoreDict).sort_index(axis=1)
-    phenotypeTable.to_csv(outbase + '_phenotypetable.txt', sep='\t')
+    phenotypeTable = pd.DataFrame(phenotypeScoreDict)
+    phenotypeTable.to_csv(outbase + '_phenotypetable.txt', sep='\t', tupleize_cols = False)
 
     if len(replicateList) > 1 and generatePlots != 'off':
         tempDataDict = {'library': libraryTable[sublibColumn],
@@ -177,7 +177,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
     negTable = phenotypeTable.loc[libraryTable[sublibColumn].loc[:,'gene'] == 'negative_control',:]
 
     if exptParameters['generate_pseudogene_dist'] != 'off' and len(exptParameters['analyses']) > 0:
-        print('Generating a pseudogene distribution from negative controls')
+        print 'Generating a pseudogene distribution from negative controls'
         sys.stdout.flush()
 
         pseudoTableList = []
@@ -213,16 +213,16 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
                     pseudoLibTables.append(pseudoLib)
 
         else:
-            print('generate_pseudogene_dist parameter not recognized, defaulting to off')
+            print 'generate_pseudogene_dist parameter not recognized, defaulting to off'
 
-        phenotypeTable = phenotypeTable.append(pd.concat(pseudoTableList,sort=True))
-        libraryTableGeneAnalysis = libraryTable[sublibColumn].append(pd.concat(pseudoLibTables,sort=True))
+        phenotypeTable = phenotypeTable.append(pd.concat(pseudoTableList))
+        libraryTableGeneAnalysis = libraryTable[sublibColumn].append(pd.concat(pseudoLibTables))
     else:
         libraryTableGeneAnalysis = libraryTable[sublibColumn]
 
     #compute gene scores for replicates, averaged reps, and pseudogenes
     if len(exptParameters['analyses']) > 0:
-        print('Computing gene scores')
+        print 'Computing gene scores'
         sys.stdout.flush()
 
         phenotypeTable_deduplicated = phenotypeTable.loc[libraryTableGeneAnalysis.drop_duplicates(['gene','sequence']).index]
@@ -233,21 +233,21 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
 
         analysisTables = []
         for analysis in exptParameters['analyses']:
-            print('--' + analysis)
+            print '--' + analysis
             sys.stdout.flush()
 
             analysisTables.append(applyGeneScoreFunction(geneGroups, negTable, analysis, exptParameters['analyses'][analysis]))
 
-        geneTable = pd.concat(analysisTables, axis=1,sort=True).reorder_levels([1,2,0],axis=1).sort_index(axis=1)
-        geneTable.to_csv(outbase + '_genetable.txt',sep='\t')
+        geneTable = pd.concat(analysisTables, axis=1).reorder_levels([1,2,0],axis=1).sort_index(axis=1)
+        geneTable.to_csv(outbase + '_genetable.txt',sep='\t', tupleize_cols = False)
 
         ### collapse the gene-transcript indices into a single score for a gene by best MW p-value, where applicable
         if exptParameters['collapse_to_transcripts'] == True and 'calculate_mw' in exptParameters['analyses']:
-            print('Collapsing transcript scores to gene scores')
+            print 'Collapsing transcript scores to gene scores'
             sys.stdout.flush()
 
             geneTableCollapsed = scoreGeneByBestTranscript(geneTable)
-            geneTableCollapsed.to_csv(outbase + '_genetable_collapsed.txt',sep='\t')
+            geneTableCollapsed.to_csv(outbase + '_genetable_collapsed.txt',sep='\t', tupleize_cols = False)
     
     if generatePlots != 'off':
         if 'calculate_ave' in exptParameters['analyses'] and 'calculate_mw' in exptParameters['analyses']:
@@ -258,7 +258,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
                 if len(replicateList) == 1 or replicate[:4] == 'ave_': #just plot averaged reps where available
                     screen_analysis.volcanoPlot(tempDataDict, phenotype, replicate, labelHits=True)
 
-    print('Done!')
+    print 'Done!'
 
 #given a gene table indexed by both gene and transcript, score genes by the best m-w p-value per phenotype/replicate
 def scoreGeneByBestTranscript(geneTable):
@@ -268,12 +268,12 @@ def scoreGeneByBestTranscript(geneTable):
 
     tupList = []
     bestTransList = []
-    for tup, group in geneTable.groupby(level=list(range(2)),axis=1):
+    for tup, group in geneTable.groupby(level=range(2),axis=1):
         tupList.append(tup)
         curFrame = geneTable.loc[zip(bestTranscriptFrame.index,bestTranscriptFrame[tup]),tup]
         bestTransList.append(curFrame.reset_index().set_index('gene'))
 
-    return pd.concat(bestTransList, axis=1, keys=tupList, sort=True)
+    return pd.concat(bestTransList, axis=1, keys=tupList)
 
 def getBestTranscript(group):
     #set the index to be transcripts and then get the index with the lowest p-value for each cell
@@ -318,17 +318,17 @@ def readLibraryFile(libraryFastaFileName, elementTypeFunc, geneNameFunc, miscFun
 
 #print all counts file paths, to assist with making an experiment table
 def printCountsFilePaths(baseDirectoryPathList):
-    print('Make a tab-delimited file with the following columns:')
-    print('counts_file\texperiment\tcondition\treplicate_id')
-    print('and the following list in the counts_file column:')
+    print 'Make a tab-delimited file with the following columns:'
+    print 'counts_file\texperiment\tcondition\treplicate_id'
+    print 'and the following list in the counts_file column:'
     for basePath in baseDirectoryPathList:
         for root, dirs, filenames in os.walk(basePath):
             for filename in fnmatch.filter(filenames,'*.counts'):
-                print(os.path.join(root, filename))
+                print os.path.join(root, filename)
 
 def mergeCountsForExperiments(experimentFileName, libraryTable):
     exptTable = pd.read_csv(experimentFileName, delimiter='\t')
-    print(exptTable)
+    print exptTable
 
     # load in all counts independently
     countsCols = []
@@ -364,7 +364,7 @@ def mergeCountsForExperiments(experimentFileName, libraryTable):
 
     #print len(exptColumns), exptColumns[-1]
 
-    exptsTable = pd.concat(exptColumns, axis = 1, keys=sorted(exptTuplesToRuns.keys()),sort=True)
+    exptsTable = pd.concat(exptColumns, axis = 1, keys=sorted(exptTuplesToRuns.keys()))
     exptsTable.columns = pd.MultiIndex.from_tuples(sorted(exptTuplesToRuns.keys()))
     #print exptsTable
 
@@ -385,9 +385,9 @@ def filterCountsPerExperiment(min_reads, exptsTable,libraryTable):
         exptDfFiltered = exptDf.align(exptDfUnderMin[exptDfUnderMin == False], axis=0, join='right')[0]
         experimentGroups.append(exptDfFiltered)
         
-        print(expt, len(exptDfUnderMin[exptDfUnderMin == True]))
+        print expt, len(exptDfUnderMin[exptDfUnderMin == True])
 
-    resultTable = pd.concat(experimentGroups, axis = 1, sort=True).align(libraryTable, axis=0)[0]
+    resultTable = pd.concat(experimentGroups, axis = 1).align(libraryTable, axis=0)[0]
 
     return resultTable
 
@@ -410,7 +410,7 @@ def filterLowCounts(countsColumns, filterType, filterThreshold):
 
 #compute phenotype scores for any given comparison of two conditions
 def computePhenotypeScore(counts1, counts2, libraryTable, growthValue, pseudocountBehavior, pseudocountValue, normToNegs=True):
-    combinedCounts = pd.concat([counts1,counts2],axis = 1,sort=True)
+    combinedCounts = pd.concat([counts1,counts2],axis = 1)
 
     #pseudocount
     if pseudocountBehavior == 'default' or pseudocountBehavior == 'zeros only':
@@ -462,7 +462,7 @@ def averagePhenotypeScores(scoreTable):
         averagedColumns.append(exptDf.mean(axis=1))
         labels.append((expt[0],expt[1],'ave_'+'_'.join(exptsToReplicates[expt])))
 
-    resultTable = pd.concat(averagedColumns, axis = 1, keys=labels,sort=True).align(scoreTable, axis=0)[0]
+    resultTable = pd.concat(averagedColumns, axis = 1, keys=labels).align(scoreTable, axis=0)[0]
     resultTable.columns = pd.MultiIndex.from_tuples(labels)
 
     return resultTable
@@ -488,7 +488,7 @@ def computeGeneScores(libraryTable, scoreTable, normToNegs = True):
         scoredColumns.append(pd.DataFrame(np.array(colList), index = groupList, columns = [('KS'),('KS_sign'),('MW')]))
     
     #return scoredColumns
-    return pd.concat(scoredColumns, axis = 1, keys=scoreTable.columns,sort=True)
+    return pd.concat(scoredColumns, axis = 1, keys=scoreTable.columns)
 
 #apply gene scoring functions to pre-grouped tables of phenotypes
 def applyGeneScoreFunction(groupedPhenotypeTable, negativeTable, analysis, analysisParamList):
@@ -497,20 +497,20 @@ def applyGeneScoreFunction(groupedPhenotypeTable, negativeTable, analysis, analy
         if numToAverage <= 0:
             means = groupedPhenotypeTable.aggregate(np.mean)
             counts = groupedPhenotypeTable.count()
-            result = pd.concat([means,counts],axis=1,keys=['average of all phenotypes','average of all phenotypes_sgRNAcount'],sort=True)
+            result = pd.concat([means,counts],axis=1,keys=['average of all phenotypes','average of all phenotypes_sgRNAcount'])
         else:
             means = groupedPhenotypeTable.apply(lambda x: averageBestN(x, numToAverage))
             counts = groupedPhenotypeTable.count()
-            result = pd.concat([means,counts],axis=1,keys=['average phenotype of strongest %d'%numToAverage, 'sgRNA count_avg'],sort=True)
+            result = pd.concat([means,counts],axis=1,keys=['average phenotype of strongest %d'%numToAverage, 'sgRNA count_avg'])
     elif analysis == 'calculate_mw':
         pvals = groupedPhenotypeTable.apply(lambda x: applyMW(x, negativeTable))
         counts = groupedPhenotypeTable.count()
-        result = pd.concat([pvals,counts],axis=1,keys=['Mann-Whitney p-value','sgRNA count_MW'],sort=True)
+        result = pd.concat([pvals,counts],axis=1,keys=['Mann-Whitney p-value','sgRNA count_MW'])
     elif analysis == 'calculate_nth':
         nth = analysisParamList[0]
         pvals = groupedPhenotypeTable.aggregate(lambda x: sorted(x, key=abs, reverse=True)[nth-1] if nth <= len(x) else np.nan)
         counts = groupedPhenotypeTable.count()
-        result = pd.concat([pvals,counts],axis=1,keys=['%dth best score' % nth,'sgRNA count_nth best'],sort=True)
+        result = pd.concat([pvals,counts],axis=1,keys=['%dth best score' % nth,'sgRNA count_nth best'])
     else:
         raise ValueError('Analysis %s not recognized or not implemented' % analysis)
 

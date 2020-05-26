@@ -153,7 +153,7 @@ def countsScatter(data, condition_x = None, replicate_x = None,
         geneSet = set(data['library']['gene'])
         for i, gene in enumerate(showGenes):
             if gene not in geneSet:
-                print('{0} not in dataset'.format(gene))
+                print '{0} not in dataset'.format(gene)
             else:
                 axis.scatter(np.log2(data['counts'].loc[data['library']['gene'] == gene, (condition_x, replicate_x)] + 1), 
                     np.log2(data['counts'].loc[data['library']['gene'] == gene, (condition_y, replicate_y)] + 1), 
@@ -175,13 +175,13 @@ def premergedCountsScatterMatrix(data, condition=None, replicate=None):
         return
 
     if 'premerged counts' not in data:
-        print('Data must be loaded with premergedCounts = True')
+        print 'Data must be loaded with premergedCounts = True'
         return
        
     dataTable = data['premerged counts'].loc[:,(condition, replicate)]
     dataColumns = dataTable.columns
     if len(dataColumns) == 1:
-        print('Only one counts file for {0}, {1}; no scatter matrix will be generated'.format(condition, replicate))
+        print 'Only one counts file for {0}, {1}; no scatter matrix will be generated'.format(condition, replicate)
         return
         
     
@@ -193,8 +193,8 @@ def premergedCountsScatterMatrix(data, condition=None, replicate=None):
             name2 = '{0:.30}'.format(os.path.split(name2)[-1])
             if i < j:
                 cleanAxes(axes[i,j], top=False, bottom=False, left=False, right=False)
-                axes[i,j].xaxis.set_tick_params(top=False,bottom=False,labelbottom=False)
-                axes[i,j].yaxis.set_tick_params(left=False,right=False,labelleft=False)
+                axes[i,j].xaxis.set_tick_params(top='off',bottom='off',labelbottom='off')
+                axes[i,j].yaxis.set_tick_params(left='off',right='off',labelleft='off')
                 
             elif i == j:
                 axes[i,j].hist(np.log2(col2.dropna() + 1), bins=int(len(col2) ** .3), histtype='step', color=almost_black, lw=1)
@@ -278,7 +278,7 @@ def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
         geneSet = set(data['library']['gene'])
         for i, gene in enumerate(showGenes):
             if gene not in geneSet:
-                print('{0} not in dataset'.format(gene))
+                print '{0} not in dataset'.format(gene)
             else:
                 axis.scatter(data['phenotypes'].loc[data['library']['gene'] == gene, (phenotype_x, replicate_x)], 
                     data['phenotypes'].loc[data['library']['gene'] == gene, (phenotype_y, replicate_y)], 
@@ -288,7 +288,7 @@ def phenotypeScatter(data, phenotype_x = None, replicate_x = None,
     if showGeneSets and len(showGeneSets) != 0:
         if not isinstance(showGeneSets,dict) or not \
             (isinstance(showGeneSets[showGeneSets.keys()[0]], set) or isinstance(showGeneSets[showGeneSets.keys()[0]], list)):
-            print('Gene sets must be a dictionary of {set_name: [gene list/set]} pairs')
+            print 'Gene sets must be a dictionary of {set_name: [gene list/set]} pairs'
             
         else:
             for j, gs in enumerate(showGeneSets):
@@ -411,7 +411,7 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
     if showGeneSets and len(showGeneSets) != 0:
         if not isinstance(showGeneSets,dict) or not \
             (isinstance(showGeneSets[showGeneSets.keys()[0]], set) or isinstance(showGeneSets[showGeneSets.keys()[0]], list)):
-            print('Gene sets must be a dictionary of {set_name: [gene list/set]} pairs')
+            print 'Gene sets must be a dictionary of {set_name: [gene list/set]} pairs'
             
         else:
             for i, gs in enumerate(showGeneSets):
@@ -460,42 +460,42 @@ def checkOptions(data, graphType, optionTuple):
     elif graphType == 'genes':
         colTups = set([colname[:2] for colname, col in data['gene scores'].iteritems()])
     else:
-        print('Graph type not recognized')
+        print 'Graph type not recognized'
         return False
 
     if optionTuple in colTups:
         return True
     else:
-        print('{0} {1} not recognized'.format(optionTuple[0],optionTuple[1]))
+        print '{0} {1} not recognized'.format(optionTuple[0],optionTuple[1])
         listOptions(data, graphType)
         return False
 
 def listOptions(data, graphType):
     if graphType == 'counts':
-        print('Condition and Replicate options are:')
-        print('\n'.join(['{0:15}\t{1}'.format(colname[0],colname[1]) for colname, col in data['counts'].iteritems()]))
+        print 'Condition and Replicate options are:'
+        print '\n'.join(['{0:15}\t{1}'.format(colname[0],colname[1]) for colname, col in data['counts'].iteritems()])
         
     elif graphType == 'phenotypes':
-        print('Phenotype and Replicate options are:')
-        print('\n'.join(['{0:15}\t{1}'.format(colname[0],colname[1]) for colname, col in data['phenotypes'].iteritems()]))
+        print 'Phenotype and Replicate options are:'
+        print '\n'.join(['{0:15}\t{1}'.format(colname[0],colname[1]) for colname, col in data['phenotypes'].iteritems()])
         
     elif graphType == 'genes':
         colTups = sorted(list(set([colname[:2] for colname, col in data['gene scores'].iteritems()])))
-        print('Phenotype and Replicate options are:')
-        print('\n'.join(['{0:15}\t{1}'.format(colname[0],colname[1]) for colname in colTups]))
+        print 'Phenotype and Replicate options are:'
+        print '\n'.join(['{0:15}\t{1}'.format(colname[0],colname[1]) for colname in colTups])
         
     else:
-        print('Graph type not recognized')
+        print 'Graph type not recognized'
     
 def getEffectSizeLabel(table):
     effectColLabels = [colname for colname, col in table.iteritems() if colname[:7] == 'average']
     
     if len(effectColLabels) == 0:
-        print('No gene effect size data columns found')
+        print 'No gene effect size data columns found'
         return None
         
     elif len(effectColLabels) > 1:
-        print('Multiple effect size data columns found, please specifiy one: ' + ', '.join(effectColLabels))
+        print 'Multiple effect size data columns found, please specifiy one: ' + ', '.join(effectColLabels)
         return None
         
     else:
@@ -505,11 +505,11 @@ def getPvalueLabel(table):
     pvalColLabels = [colname for colname, col in table.iteritems() if colname == 'Mann-Whitney p-value']
     
     if len(pvalColLabels) == 0:
-        print('No p-value data columns found')
+        print 'No p-value data columns found'
         return None
         
     elif len(pvalColLabels) > 1:
-        print('Multiple p-value data columns found, please specifiy one: ' + ', '.join(effectColLabels))
+        print 'Multiple p-value data columns found, please specifiy one: ' + ', '.join(effectColLabels)
         return None
         
     else:
@@ -527,14 +527,14 @@ def displayFigure(fig, savetitle=''):
             nextFigNum = max(figNums) + 1
 
         fullTitle =  os.path.join(plotDirectory,'{0:03d}_fig_{1}.{2}'.format(nextFigNum, savetitle, imageExtension))
-        print(fullTitle)
+        print fullTitle
         fig.savefig(fullTitle, dpi=1000)
         plt.close(fig) 
         
         return fullTitle
         
     if plotDirectory == None and not plotWithPylab:
-        print('Must be in pylab and/or set a plot directory to display figures')
+        print 'Must be in pylab and/or set a plot directory to display figures'
         
         plt.close(fig) 
         
