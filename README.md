@@ -20,7 +20,7 @@
 3. [Optional] Generate graphs interactively using **screen_analysis.py**
 
 ### Dependencies
-* Python v2.7
+* Python v3 (tested in 3.7; legacy scripts for v2.7 are available in the python2 folder)
 * Biopython
 * Scipy/Numpy/Pandas/Matplotlib
 * iPython or iPython Notebook recommended for interactive graph plotting
