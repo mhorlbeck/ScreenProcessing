@@ -116,15 +116,15 @@ def parseLibraryFasta(libraryFasta):
 			else:
 				curSeq += line.strip().upper()
 
-		#at the end, add the final item that was not covered in the loop
-		if curSeqId != '' and curSeq != '':
-			if curSeq not in seqToIds:
-				seqToIds[curSeq] = []
-			seqToIds[curSeq].append(curSeqId)
+	#at the end, add the final item that was not covered in the loop
+	if curSeqId != '' and curSeq != '':
+		if curSeq not in seqToIds:
+			seqToIds[curSeq] = []
+		seqToIds[curSeq].append(curSeqId)
 
-			idsToReadcounts[curSeqId] = 0
+		idsToReadcounts[curSeqId] = 0
 
-			readLengths.append(len(curSeq))
+		readLengths.append(len(curSeq))
 
 	if len(seqToIds) == 0 or len(idsToReadcounts) == 0 or readLengths[0] == 0:
 		raise ValueError('library fasta could not be parsed or contains no sequences')
