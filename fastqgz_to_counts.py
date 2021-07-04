@@ -171,7 +171,8 @@ def printNow(printInput):
 
 
 ### Global variables ###
-acceptedFileTypes = [('*.fastq.gz', 'fqgz'),
+acceptedFileTypes = [('*.fq.gz', 'fqgz'),
+                     ('*.fastq.gz', 'fqgz'),
                      ('*.fastq', 'fq'),
                      ('*.fq', 'fq'),
                      ('*.fa', 'fa'),
