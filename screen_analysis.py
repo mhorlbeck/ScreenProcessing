@@ -65,17 +65,17 @@ plt.rcParams['xtick.major.width'] = axisLineWidth
 
 def loadData(experimentName, collapsedToTranscripts = True, premergedCounts = False):
     dataDict = {'library': pd.read_csv(experimentName + '_librarytable.txt',sep='\t',header=0,index_col=0),
-    'counts': pd.read_csv(experimentName + '_mergedcountstable.txt',sep='\t',header=range(2),index_col=range(1)),
-    'phenotypes': pd.read_csv(experimentName + '_phenotypetable.txt',sep='\t',header=range(2),index_col=range(1))}
+    'counts': pd.read_csv(experimentName + '_mergedcountstable.txt',sep='\t',header=list(range(2)),index_col=list(range(1))),
+    'phenotypes': pd.read_csv(experimentName + '_phenotypetable.txt',sep='\t',header=list(range(2)),index_col=list(range(1)))}
     
     if premergedCounts:
-        dataDict['premerged counts'] = pd.read_csv(experimentName + '_rawcountstable.txt',sep='\t',header=range(3),index_col=range(1))
+        dataDict['premerged counts'] = pd.read_csv(experimentName + '_rawcountstable.txt',sep='\t',header=list(range(3)),index_col=list(range(1)))
     
     if collapsedToTranscripts:
-        dataDict['transcript scores'] = pd.read_csv(experimentName + '_genetable.txt',sep='\t',header=range(3),index_col=range(2))
-        dataDict['gene scores'] = pd.read_csv(experimentName + '_genetable_collapsed.txt',sep='\t',header=range(3),index_col=range(1))
+        dataDict['transcript scores'] = pd.read_csv(experimentName + '_genetable.txt',sep='\t',header=list(range(3)),index_col=list(range(2)))
+        dataDict['gene scores'] = pd.read_csv(experimentName + '_genetable_collapsed.txt',sep='\t',header=list(range(3)),index_col=list(range(1)))
     else:
-        dataDict['gene scores'] = pd.read_csv(experimentName + '_genetable.txt',sep='\t',header=range(3),index_col=range(1))
+        dataDict['gene scores'] = pd.read_csv(experimentName + '_genetable.txt',sep='\t',header=list(range(3)),index_col=list(range(1)))
     
     return dataDict
 
