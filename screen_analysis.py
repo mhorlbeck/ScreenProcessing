@@ -410,7 +410,7 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
 
     if showGeneSets and len(showGeneSets) != 0:
         if not isinstance(showGeneSets,dict) or not \
-            (isinstance(showGeneSets[showGeneSets.keys()[0]], set) or isinstance(showGeneSets[showGeneSets.keys()[0]], list)):
+            (isinstance(list(showGeneSets),set)) or (isinstance(list(showGeneSets),list)):
             print('Gene sets must be a dictionary of {set_name: [gene list/set]} pairs')
 
         else:

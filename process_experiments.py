@@ -257,7 +257,6 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
             for (phenotype, replicate), gtable in geneTableCollapsed.groupby(level=[0,1], axis=1):
                 if len(replicateList) == 1 or replicate[:4] == 'ave_': #just plot averaged reps where available
                     screen_analysis.volcanoPlot(tempDataDict, phenotype, replicate, labelHits=True)
-
     print('Done!')
 
 #given a gene table indexed by both gene and transcript, score genes by the best m-w p-value per phenotype/replicate
@@ -520,7 +519,7 @@ def averageBestN(group, numToAverage):
     return group.apply(lambda column: np.mean(sorted(column.dropna(),key=abs,reverse=True)[:numToAverage]) if len(column.dropna()) > 0 else np.nan)
 
 def applyMW(group, negativeTable):
-    if int(sp.__version__.split('.')[1]) >= 17: #implementation of the "alternative flag":
+    if int(sp.__version__.split('.')[1]) >= 17 or int(sp.__version__.split('.')[0]) >= 1: #implementation of the "alternative flag":
         return group.apply(lambda column: stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values, alternative = 'two-sided')[1] if len(column.dropna()) > 0 else np.nan)
     else:
         return group.apply(lambda column: stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values)[1] * 2 if len(column.dropna()) > 0 else np.nan) #pre v0.17 stats.mannwhitneyu is one-tailed!!

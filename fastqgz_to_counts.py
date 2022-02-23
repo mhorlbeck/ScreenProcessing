@@ -196,8 +196,7 @@ if __name__ == '__main__':
 	try:
 		seqToIdDict, idsToReadcountDict, expectedReadLength = parseLibraryFasta(args.Library_Fasta)
 
-		printNow('Library file loaded successfully:\n\t%.2E elements (%.2E unique sequences)\t%dbp reads expected' \
-				% (len(idsToReadcountDict), len(seqToIdDict), expectedReadLength))
+		printNow(f'Library file loaded successfully:\n\t{len(idsToReadcountDict)} elements ({len(seqToIdDict)} unique sequences)\t{expectedReadLength}bp reads expected')
 
 	except IOError:
 		sys.exit('Input error: library fasta file not found')
