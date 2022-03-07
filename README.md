@@ -28,7 +28,7 @@
 (ScreenProcessing no longer uses Bowtie to align sequencing reads; if you want to use or fork from this functionality use an earlier version of the program)
 
 ### Installation (In Progress)
-* A requirements.txt file has been added, as there may be issues with some current packages. This may not be the most recent functional version - testing is in progress.
+* A requirements.txt file has been added, as there may be issues with some current packages. This may not be the most recent functional version - testing is in progress. This file should be used to create a virtual environment.
 
 # ScreenProcessing Demo
 A PDF slideshow with a step-by-step tutorial of screen analysis using the data files included in the Demo folder can found here: [ScreenProcessing Demo](ScreenProcessing_tutorial.pdf)
