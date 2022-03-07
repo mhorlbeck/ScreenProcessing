@@ -367,6 +367,8 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
     pseudoStd = np.std(pseudogeneScores[effectSizeLabel])
     table.loc[:,'thresh'] = discScore(table[effectSizeLabel]/pseudoStd,-1*np.log10(table[pvalueLabel])) >= hitThreshold
 
+    # Write out data from volcano plot in order to obtain significant genes (true/false in 'thresh' column)
+    saveTable(table, savetitle=phenotype + "_" + replicate + "_volcanotable.csv")
 
     yGenes = -1*np.log10(table[pvalueLabel])
     xGenes = table[effectSizeLabel]
@@ -446,6 +448,15 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
 
     plt.tight_layout()
     return displayFigure(fig, 'volcano_plot')
+
+
+def saveTable(table, savetitle=''):
+   if plotDirectory != None:
+        fullTitle =  os.path.join(plotDirectory,savetitle)
+        print(fullTitle)
+        table.to_csv(fullTitle)
+        return fullTitle
+
 
 ##utility functions
 def checkOptions(data, graphType, optionTuple):
