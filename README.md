@@ -30,9 +30,9 @@
 ### Installation (In Progress)
 * A requirements.txt file has been added, as there may be issues with some current packages. This may not be the most recent functional version - testing is in progress. This file should be used to create a virtual environment.
 
-* Alternatively, a ScreenProcessing.def file has been added, intended to be used to create a Singularity container that has the correct functional versions of dependencies. Here is how to create a container:
+* Alternatively, a Singularity Definition file has been added, intended to be used to create a Singularity container that has the correct functional versions of dependencies. Here is how to create a container:
 
-`singularity build ScreenProcessing.sif ScreenProcessing.def`
+     `singularity build ScreenProcessing.sif ScreenProcessing.def`
 
 # ScreenProcessing Demo
 A PDF slideshow with a step-by-step tutorial of screen analysis using the data files included in the Demo folder can found here: [ScreenProcessing Demo](ScreenProcessing_tutorial.pdf)
