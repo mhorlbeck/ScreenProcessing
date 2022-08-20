@@ -256,7 +256,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
 
             for (phenotype, replicate), gtable in geneTableCollapsed.groupby(level=[0,1], axis=1):
                 if len(replicateList) == 1 or replicate[:4] == 'ave_': #just plot averaged reps where available
-                    screen_analysis.volcanoPlot(tempDataDict, phenotype, replicate, labelHits=True)
+                    screen_analysis.volcanoPlot(tempDataDict, phenotype, replicate, labelHits=False)
     print('Done!')
 
 #given a gene table indexed by both gene and transcript, score genes by the best m-w p-value per phenotype/replicate
