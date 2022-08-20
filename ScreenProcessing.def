@@ -20,6 +20,10 @@ From: ubuntu:20.04
 
 	# clean up
 	apt autoremove
-
+%labels
+	Author "Scot Federman"
+	Version v1.0
+%help
+	This is a container used to run Screen Processing, a bioinformatics pipeline to analyze sequencing data from pooled screens.
 %environment
 	export PATH=$PATH:/ScreenProcessing
