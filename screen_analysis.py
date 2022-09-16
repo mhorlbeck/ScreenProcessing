@@ -340,7 +340,8 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
             labelHits = False, showGeneSets = {}, labelGeneSets = True, colorGeneSets = (),
             geneset_color = '#222222', geneset_label = "Geneset", geneset_pointsize = 4,
             gene_hit_color='#7570b3', gene_nonhit_color='#999999', gene_pointsize = 4,
-            nc_hit_gene_color='#d95f02', nc_gene_nonhit_color='#dadaeb', nc_gene_pointsize = 4,):
+            nc_hit_gene_color='#d95f02', nc_gene_nonhit_color='#dadaeb', nc_gene_pointsize = 4,
+            xminimum="X", xmaximum="X", yminimum="X", ymaximum="X"):
     if not checkOptions(data, 'genes', (phenotype,replicate)):
         return
 
@@ -446,14 +447,31 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
 
     plotGrid(axis, vert_origin=True, horiz_origin=False, unity=False)
 
-    ymax = np.ceil(max(yGenes)) * 1.02
-    xmin = min(xGenes) * 1.05
-    xmax = max(xGenes) * 1.05
+# If any of these are set to 'X', then they have not been set by user, so stick with original defaults
+    if yminimum == "X":
+        ymin = 0
+    else:
+        ymin = yminimum
+
+    if ymaximum == "X":
+        ymax = np.ceil(max(yGenes)) * 1.02
+    else:
+        ymax = ymaximum
+
+    if xminimum == "X":
+        xmin = min(xGenes) * 1.05
+    else:
+        xmin = xminimum
+
+    if xmaximum == "X":
+        xmax = max(xGenes) * 1.05
+    else:
+        xmax = xmaximum
 
     axis.plot(np.linspace(xmin,xmax,1000),np.abs(hitThreshold/np.linspace(xmin/pseudoStd,xmax/pseudoStd,1000)),'k--', lw=.5)
 
     axis.set_xlim((xmin,xmax))
-    axis.set_ylim((0,ymax))
+    axis.set_ylim((ymin,ymax))
 
     axis.set_xlabel('{3} {0} {1} ({2})'.format(phenotype, replicate, effectSizeLabel, 'gene' if not transcripts else 'transcript'),fontsize=8)
     axis.set_ylabel('-log10 {0}'.format(pvalueLabel,fontsize=8))
