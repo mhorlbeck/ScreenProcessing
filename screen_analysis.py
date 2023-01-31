@@ -341,7 +341,8 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
             geneset_color = '#222222', geneset_label = "Geneset", geneset_pointsize = 4,
             gene_hit_color='#7570b3', gene_nonhit_color='#999999', gene_pointsize = 4,
             nc_hit_gene_color='#d95f02', nc_gene_nonhit_color='#dadaeb', nc_gene_pointsize = 4,
-            xminimum="X", xmaximum="X", yminimum="X", ymaximum="X"):
+            xminimum="X", xmaximum="X", yminimum="X", ymaximum="X",
+            legend_location="best", legend_facecolor="lightgray", legend_frameon="True", legend_fontsize=6, legend_framealpha=0.8, legend_edgecolor="black"):
     if not checkOptions(data, 'genes', (phenotype,replicate)):
         return
 
@@ -476,7 +477,7 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
     axis.set_xlabel('{3} {0} {1} ({2})'.format(phenotype, replicate, effectSizeLabel, 'gene' if not transcripts else 'transcript'),fontsize=8)
     axis.set_ylabel('-log10 {0}'.format(pvalueLabel,fontsize=8))
 
-    plt.legend(loc='best', fontsize=6, handletextpad=0.005)
+    plt.legend(loc=legend_location, fontsize=legend_fontsize, handletextpad=0.005, frameon=legend_frameon, facecolor=legend_facecolor, framealpha=legend_framealpha, edgecolor=legend_edgecolor)
 
     plt.tight_layout()
     return displayFigure(fig, 'volcano_plot')
