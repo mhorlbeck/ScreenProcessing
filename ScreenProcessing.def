@@ -12,8 +12,9 @@ From: ubuntu:20.04
 	### common prerequisites
 	apt install -y git python3 python3-pip
 
-	# Screen Processing from LGR GitHub repo
-	git clone https://github.com/ucsf-lgr/ScreenProcessing.git
+	# Screen Processing from mhorlbeck repo; credit to Scot Federman for adding Singularity installation option
+	# Consider also UCSF LGR repo if there are more up-to-date commits
+	git clone https://github.com/mhorlbeck/ScreenProcessing.git
 
 	# This is derived from the GitHub repo above
 	pip install -r ScreenProcessing/requirements.txt
