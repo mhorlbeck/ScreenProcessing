@@ -120,7 +120,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
         tempDataDict = {'library': libraryTable[sublibColumn],
                         'counts': mergedCountsTable}
 
-        for (phenotype, replicate), countsCol in mergedCountsTable.iteritems():
+        for (phenotype, replicate), countsCol in mergedCountsTable.items():
             screen_analysis.countsHistogram(tempDataDict, phenotype, replicate)
 
     # create pairs of columns for each comparison, filter to na, then generate sgRNA phenotype score
@@ -186,12 +186,12 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
         printNow('-generating replicate phenotype histograms and scatter plots')
 
         for phenotype, phengroup in phenotypeTable.groupby(level=0, axis=1):
-            for i, ((p, rep1), col1) in enumerate(phengroup.iteritems()):
+            for i, ((p, rep1), col1) in enumerate(phengroup.items()):
                 if rep1[:4] == 'ave_':
                     screen_analysis.phenotypeHistogram(
                         tempDataDict, phenotype, rep1)
 
-                for j, ((p, rep2), col2) in enumerate(phengroup.iteritems()):
+                for j, ((p, rep2), col2) in enumerate(phengroup.items()):
                     if rep2[:4] == 'ave_' or j <= i:
                         continue
 
