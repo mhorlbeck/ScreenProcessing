@@ -184,6 +184,8 @@ testLines = 10000
 
 
 if __name__ == '__main__':
+    __spec__ = None #required for running multiprocessing in jupyter notebook
+
     parser = argparse.ArgumentParser(
         description='Process raw sequencing data from screens to counts files in parallel')
     parser.add_argument(
