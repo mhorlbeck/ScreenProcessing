@@ -617,11 +617,16 @@ def averageBestN(group, numToAverage):
 
 
 def applyMW(group, negativeTable):
-    # implementation of the "alternative flag":
-    if int(sp.__version__.split('.')[1]) >= 17 or int(sp.__version__.split('.')[0]) >= 1:
-        return group.apply(lambda column: stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values, alternative='two-sided')[1] if len(column.dropna()) > 0 else np.nan)
-    else:
-        # pre v0.17 stats.mannwhitneyu is one-tailed!!
+    sp_version = [int(v) for v in sp.__version__.split('.')]
+    if sp_version[0] >= 1 and sp_version[1] >= 6: #introduction of "exact" p-value calculation which can be prohibitively slow and does not match original behavior
+        return group.apply(lambda column: stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values, alternative='two-sided', method='asymptotic')[1] \
+            if len(column.dropna()) > 0 else np.nan)
+
+    elif (sp_version[0] == 0 and sp_version[1] >= 17) or sp_version[0] >= 1: # implementation of the "alternative flag"
+        return group.apply(lambda column: stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values, alternative='two-sided')[1] \
+            if len(column.dropna()) > 0 else np.nan)
+
+    else: # pre v0.17 stats.mannwhitneyu is one-tailed!!
         return group.apply(lambda column: stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values)[1] * 2 if len(column.dropna()) > 0 else np.nan)
 
 
