@@ -203,9 +203,9 @@ def premergedCountsScatterMatrix(data, condition=None, replicate=None):
     fig, axes = plt.subplots(len(dataColumns), len(dataColumns), figsize=(
         len(dataColumns)*2.5, len(dataColumns)*2.5))
 
-    for i, (name1, col1) in enumerate(dataTable.iteritems()):
+    for i, (name1, col1) in enumerate(dataTable.items()):
         name1 = '{0:.30}'.format(os.path.split(name1)[-1])
-        for j, (name2, col2) in enumerate(dataTable.iteritems()):
+        for j, (name2, col2) in enumerate(dataTable.items()):
             name2 = '{0:.30}'.format(os.path.split(name2)[-1])
             if i < j:
                 cleanAxes(axes[i, j], top=False, bottom=False,
@@ -493,13 +493,13 @@ def checkOptions(data, graphType, optionTuple):
 
     if graphType == 'counts':
         colTups = set([colname[:2]
-                      for colname, col in data['counts'].iteritems()])
+                      for colname, col in data['counts'].items()])
     elif graphType == 'phenotypes':
         colTups = set([colname[:2]
-                      for colname, col in data['phenotypes'].iteritems()])
+                      for colname, col in data['phenotypes'].items()])
     elif graphType == 'genes':
         colTups = set([colname[:2]
-                      for colname, col in data['gene scores'].iteritems()])
+                      for colname, col in data['gene scores'].items()])
     else:
         print('Graph type not recognized')
         return False
@@ -516,16 +516,16 @@ def listOptions(data, graphType):
     if graphType == 'counts':
         print('Condition and Replicate options are:')
         print('\n'.join(['{0:15}\t{1}'.format(colname[0], colname[1])
-              for colname, col in data['counts'].iteritems()]))
+              for colname, col in data['counts'].items()]))
 
     elif graphType == 'phenotypes':
         print('Phenotype and Replicate options are:')
         print('\n'.join(['{0:15}\t{1}'.format(colname[0], colname[1])
-              for colname, col in data['phenotypes'].iteritems()]))
+              for colname, col in data['phenotypes'].items()]))
 
     elif graphType == 'genes':
         colTups = sorted(
-            list(set([colname[:2] for colname, col in data['gene scores'].iteritems()])))
+            list(set([colname[:2] for colname, col in data['gene scores'].items()])))
         print('Phenotype and Replicate options are:')
         print('\n'.join(['{0:15}\t{1}'.format(
             colname[0], colname[1]) for colname in colTups]))
@@ -536,7 +536,7 @@ def listOptions(data, graphType):
 
 def getEffectSizeLabel(table):
     effectColLabels = [colname for colname,
-                       col in table.iteritems() if colname[:7] == 'average']
+                       col in table.items() if colname[:7] == 'average']
 
     if len(effectColLabels) == 0:
         print('No gene effect size data columns found')
@@ -552,7 +552,7 @@ def getEffectSizeLabel(table):
 
 
 def getPvalueLabel(table):
-    pvalColLabels = [colname for colname, col in table.iteritems(
+    pvalColLabels = [colname for colname, col in table.items(
     ) if colname == 'Mann-Whitney p-value']
 
     if len(pvalColLabels) == 0:
