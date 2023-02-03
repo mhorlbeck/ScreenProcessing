@@ -549,35 +549,7 @@ def averagePhenotypeScores(scoreTable):
     return resultTable
 
 
-def computeGeneScores(libraryTable, scoreTable, normToNegs=True):
-    geneGroups = scoreTable.groupby(libraryTable['gene_name'])
-
-    scoredColumns = []
-    for expt in scoreTable.columns:
-        if normToNegs == True:
-            negArray = np.ma.array(
-                data=scoreTable[expt].loc[geneGroups.groups['negative_control']].dropna(), mask=False)
-        else:
-            negArray = np.ma.array(data=scoreTable[expt].dropna(), mask=False)
-
-        colList = []
-        groupList = []
-        for name, group in geneGroups:
-            if name == 'negative_control':
-                continue
-            # group[expt].apply(geneStats, axis = 0, negArray = negArray))
-            colList.append(geneStats(group[expt], negArray))
-            groupList.append(name)
-
-        scoredColumns.append(pd.DataFrame(
-            np.array(colList), index=groupList, columns=[('KS'), ('KS_sign'), ('MW')]))
-
-    # return scoredColumns
-    return pd.concat(scoredColumns, axis=1, keys=scoreTable.columns, sort=True)
-
 # apply gene scoring functions to pre-grouped tables of phenotypes
-
-
 def applyGeneScoreFunction(groupedPhenotypeTable, negativeTable, analysis, analysisParamList):
     if analysis == 'calculate_ave':
         numToAverage = analysisParamList[0]
