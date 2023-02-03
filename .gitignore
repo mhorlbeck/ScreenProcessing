@@ -1,3 +1,4 @@
 *.pyc
 *.ipynb
 .idea/*
+.DS_Store
