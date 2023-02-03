@@ -297,7 +297,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
             tempDataDict = {'library': libraryTable[sublibColumn],
                             'gene scores': geneTableCollapsed if exptParameters['collapse_to_transcripts'] else geneTable}
 
-            for (phenotype, replicate), gtable in geneTableCollapsed.groupby(level=[0, 1], axis=1):
+            for (phenotype, replicate), gtable in tempDataDict['gene scores'].groupby(level=[0, 1], axis=1):
                 # just plot averaged reps where available
                 if len(replicateList) == 1 or replicate[:4] == 'ave_':
                     screen_analysis.volcanoPlot(
