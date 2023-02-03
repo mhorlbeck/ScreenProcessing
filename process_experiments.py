@@ -250,10 +250,10 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
         else:
             print('generate_pseudogene_dist parameter not recognized, defaulting to off')
 
-        phenotypeTable = phenotypeTable.append(
-            pd.concat(pseudoTableList, sort=True))
-        libraryTableGeneAnalysis = libraryTable[sublibColumn].append(
-            pd.concat(pseudoLibTables, sort=True))
+        phenotypeTable = pd.concat((phenotypeTable,
+            pd.concat(pseudoTableList, sort=True)))
+        libraryTableGeneAnalysis = pd.concat((libraryTable[sublibColumn],
+            pd.concat(pseudoLibTables, sort=True)))
     else:
         libraryTableGeneAnalysis = libraryTable[sublibColumn]
 
