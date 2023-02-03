@@ -214,8 +214,7 @@ if __name__ == '__main__':
         seqToIdDict, idsToReadcountDict, expectedReadLength = parseLibraryFasta(
             args.Library_Fasta)
 
-        printNow('Library file loaded successfully:\n\t%.2E elements (%.2E unique sequences)\t%dbp reads expected'
-                 % (len(idsToReadcountDict), len(seqToIdDict), expectedReadLength))
+        printNow(f'Library file loaded successfully:\n\t{len(idsToReadcountDict):.2E} elements ({len(seqToIdDict):.2E} unique sequences)\t{expectedReadLength}bp reads expected')
 
     except IOError:
         sys.exit('Input error: library fasta file not found')
@@ -244,7 +243,7 @@ if __name__ == '__main__':
         sys.exit('Error while processing sequencing files: ' + ' '.join(err.args))
 
     for filename, result in resultList:
-        print(filename + ':\n\t%.2E reads\t%.2E aligning (%.2f%%)' % result)
+        print(f"{filename} :\n\t{result[0]:.2E} reads\t{result[1]:.2E} aligning ({result[2]:.2f}%)")
 
     pool.close()
     pool.join()

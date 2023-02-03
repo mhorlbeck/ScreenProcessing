@@ -301,7 +301,7 @@ def processExperimentsFromConfig(configFile, libraryDirectory, generatePlots='pn
                 # just plot averaged reps where available
                 if len(replicateList) == 1 or replicate[:4] == 'ave_':
                     screen_analysis.volcanoPlot(
-                        tempDataDict, phenotype, replicate, labelHits=True)
+                        tempDataDict, phenotype, replicate, labelHits=False)
 
     print('Done!')
 
@@ -618,7 +618,7 @@ def averageBestN(group, numToAverage):
 
 def applyMW(group, negativeTable):
     # implementation of the "alternative flag":
-    if int(sp.__version__.split('.')[1]) >= 17:
+    if int(sp.__version__.split('.')[1]) >= 17 or int(sp.__version__.split('.')[0]) >= 1:
         return group.apply(lambda column: stats.mannwhitneyu(column.dropna().values, negativeTable[column.name].dropna().values, alternative='two-sided')[1] if len(column.dropna()) > 0 else np.nan)
     else:
         # pre v0.17 stats.mannwhitneyu is one-tailed!!

@@ -371,7 +371,13 @@ def sgRNAsPassingFilterHist(data, phenotype, replicate, transcripts=False):
 
 def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPseudo=True,
                 effectSizeLabel=None, pvalueLabel=None, hitThreshold=7,
-                labelHits=False, showGeneSets={}, labelGeneSets=True):
+                labelHits = False, showGeneSets = {}, labelGeneSets = True, colorGeneSets = (),
+                geneset_color = '#222222', geneset_label = "Geneset", geneset_pointsize = 4,
+                gene_hit_color='#7570b3', gene_nonhit_color='#999999', gene_pointsize = 4,
+                nc_hit_gene_color='#d95f02', nc_gene_nonhit_color='#dadaeb', nc_gene_pointsize = 4,
+                xminimum=None, xmaximum=None, yminimum=None, ymaximum=None,
+                legend_location="best", legend_facecolor="lightgray", legend_frameon="True", 
+                legend_fontsize=6, legend_framealpha=0.8, legend_edgecolor="black"):
     if not checkOptions(data, 'genes', (phenotype, replicate)):
         return
 
@@ -408,14 +414,14 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
     cleanAxes(axis)
 
     axis.scatter(table.loc[isPseudo.ne(True)].loc[table['thresh'], effectSizeLabel], -1*np.log10(table.loc[isPseudo.ne(True)].loc[table['thresh'], pvalueLabel].values),
-                 s=4,
-                 c='#7570b3',
+                 s=gene_pointsize,
+                 c=gene_hit_color,
                  label='Gene hit',
                  rasterized=True)
 
     axis.scatter(table.loc[isPseudo.ne(True)].loc[table['thresh'].ne(True), effectSizeLabel], -1*np.log10(table.loc[isPseudo.ne(True)].loc[table['thresh'].ne(True), pvalueLabel].values),
-                 s=4,
-                 c='#999999',
+                 s=gene_pointsize,
+                 c=gene_nonhit_color,
                  label='Gene non-hit',
                  rasterized=True)
 
@@ -429,15 +435,23 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
 
     if showPseudo:
         axis.scatter(table.loc[isPseudo.ne(False)].loc[table['thresh'], effectSizeLabel], -1*np.log10(table.loc[isPseudo.ne(False)].loc[table['thresh'], pvalueLabel].values),
-                     s=4,
-                     c='#d95f02',
+                     s=nc_gene_pointsize,
+                     c=nc_hit_gene_color,
                      label='Negative control gene hit',
                      rasterized=True)
 
         axis.scatter(table.loc[isPseudo.ne(False)].loc[table['thresh'].ne(True), effectSizeLabel], -1*np.log10(table.loc[isPseudo.ne(False)].loc[table['thresh'].ne(True), pvalueLabel].values),
-                     s=4,
-                     c='#dadaeb',
+                     s=nc_gene_pointsize,
+                     c=nc_gene_nonhit_color,
                      label='Negative control gene',
+                     rasterized=True)
+
+    if colorGeneSets:
+        colored_table = table.loc[colorGeneSets]
+        axis.scatter(colored_table.loc[isPseudo.ne(True)].loc[colored_table['thresh'],effectSizeLabel], -1*np.log10(colored_table.loc[isPseudo.ne(True)].loc[colored_table['thresh'],pvalueLabel].values),
+                     s=geneset_pointsize,
+                     c=geneset_color,
+                     label = geneset_label,
                      rasterized=True)
 
     if showGeneSets and len(showGeneSets) != 0:
@@ -464,6 +478,24 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
 
     plotGrid(axis, vert_origin=True, horiz_origin=False, unity=False)
 
+    # If any of these are set to None, then they have not been set by user, so stick with original defaults
+    if not yminimum:
+        ymin = 0
+    else:
+        ymin = yminimum
+    if not ymaximum:
+        ymax = np.ceil(max(yGenes)) * 1.02
+    else:
+        ymax = ymaximum
+    if not xminimum:
+        xmin = min(xGenes) * 1.05
+    else:
+        xmin = xminimum
+    if not xmaximum:
+        xmax = max(xGenes) * 1.05
+    else:
+        xmax = xmaximum
+
     ymax = np.ceil(max(yGenes)) * 1.02
     xmin = min(xGenes) * 1.05
     xmax = max(xGenes) * 1.05
@@ -472,13 +504,13 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
               np.linspace(xmin/pseudoStd, xmax/pseudoStd, 1000)), 'k--', lw=.5)
 
     axis.set_xlim((xmin, xmax))
-    axis.set_ylim((0, ymax))
+    axis.set_ylim((ymin, ymax))
 
     axis.set_xlabel('{3} {0} {1} ({2})'.format(phenotype, replicate,
                     effectSizeLabel, 'gene' if not transcripts else 'transcript'), fontsize=8)
     axis.set_ylabel('-log10 {0}'.format(pvalueLabel, fontsize=8))
 
-    plt.legend(loc='best', fontsize=6, handletextpad=0.005)
+    plt.legend(loc=legend_location, fontsize=legend_fontsize, handletextpad=0.005, frameon=legend_frameon, facecolor=legend_facecolor, framealpha=legend_framealpha, edgecolor=legend_edgecolor)
 
     plt.tight_layout()
     return displayFigure(fig, 'volcano_plot')
