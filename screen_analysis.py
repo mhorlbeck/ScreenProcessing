@@ -554,6 +554,20 @@ def getVolcanoHits(data, phenotype=None, replicate=None, transcripts=False,
 
 def discScore(z, p): return p * np.abs(z)
 
+def getAllDiscriminantScores(data, transcripts=False, effectSizeLabel=None, pvalueLabel=None):
+    colTups = sorted(
+            list(set([colname[:2] for colname, col in data['gene scores'].items()])))
+
+    return pd.concat([getVolcanoHits(data, 
+                    phenotype=phen, 
+                    replicate=rep,
+                    transcripts=transcripts, 
+                    effectSizeLabel=effectSizeLabel, 
+                    pvalueLabel=pvalueLabel, 
+                    hitThreshold=None) 
+        for phen, rep in colTups], axis=1, keys=colTups)
+
+
 def checkOptions(data, graphType, optionTuple):
     if optionTuple[0] == None or optionTuple[1] == None:
         listOptions(data, graphType)
