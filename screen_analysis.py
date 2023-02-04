@@ -400,12 +400,10 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
         if pvalueLabel == None:
             return
 
-    def discScore(z, p): return p * np.abs(z)
+    disc_scores = getVolcanoHits(data, phenotype=phenotype, replicate=replicate, transcripts=transcripts,
+        effectSizeLabel=effectSizeLabel, pvalueLabel=pvalueLabel, hitThreshold=None) #threshold = None here to get the full list of scores
 
-    pseudogeneScores = table[isPseudo]
-    pseudoStd = np.std(pseudogeneScores[effectSizeLabel])
-    table.loc[:, 'thresh'] = discScore(
-        table[effectSizeLabel]/pseudoStd, -1*np.log10(table[pvalueLabel])) >= hitThreshold
+    table.loc[:, 'thresh'] = disc_scores >= hitThreshold
 
     yGenes = -1*np.log10(table[pvalueLabel])
     xGenes = table[effectSizeLabel]
@@ -500,6 +498,7 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
     xmin = min(xGenes) * 1.05
     xmax = max(xGenes) * 1.05
 
+    pseudoStd = np.std(table[isPseudo][effectSizeLabel])
     axis.plot(np.linspace(xmin, xmax, 1000), np.abs(hitThreshold /
               np.linspace(xmin/pseudoStd, xmax/pseudoStd, 1000)), 'k--', lw=.5)
 
@@ -516,6 +515,57 @@ def volcanoPlot(data, phenotype=None, replicate=None, transcripts=False, showPse
     return displayFigure(fig, 'volcano_plot')
 
 # utility functions
+
+# return all discriminant scores if hitThreshold=None, or genes/scores above threshold if provided
+def getVolcanoHits(data, phenotype=None, replicate=None, transcripts=False,
+                effectSizeLabel=None, pvalueLabel=None, hitThreshold=7):
+    if not checkOptions(data, 'genes', (phenotype, replicate)):
+        return
+
+    if transcripts:
+        table = data['transcript scores'][(phenotype, replicate)].copy()
+        isPseudo = table.apply(lambda row: row.name[0][:6] == 'pseudo', axis=1)
+    else:
+        table = data['gene scores'][(phenotype, replicate)].copy()
+        isPseudo = table.apply(lambda row: row.name[:6] == 'pseudo', axis=1)
+
+    if effectSizeLabel == None:
+        effectSizeLabel = getEffectSizeLabel(table)
+
+        if effectSizeLabel == None:
+            return
+
+    if pvalueLabel == None:
+        pvalueLabel = getPvalueLabel(table)
+
+        if pvalueLabel == None:
+            return
+
+    pseudogeneScores = table[isPseudo]
+    pseudoStd = np.std(pseudogeneScores[effectSizeLabel])
+
+    scores = discScore(table[effectSizeLabel]/pseudoStd, -1*np.log10(table[pvalueLabel]))
+
+    if hitThreshold == None:
+        return scores
+    else:
+        return scores.loc[scores >= hitThreshold].sort_values()
+
+
+def discScore(z, p): return p * np.abs(z)
+
+def getAllDiscriminantScores(data, transcripts=False, effectSizeLabel=None, pvalueLabel=None):
+    colTups = sorted(
+            list(set([colname[:2] for colname, col in data['gene scores'].items()])))
+
+    return pd.concat([getVolcanoHits(data, 
+                    phenotype=phen, 
+                    replicate=rep,
+                    transcripts=transcripts, 
+                    effectSizeLabel=effectSizeLabel, 
+                    pvalueLabel=pvalueLabel, 
+                    hitThreshold=None) 
+        for phen, rep in colTups], axis=1, keys=colTups)
 
 
 def checkOptions(data, graphType, optionTuple):
