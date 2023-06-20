@@ -1,3 +1,4 @@
+[![DOI:10.7554/eLife.19760](http://img.shields.io/badge/DOI-10.7554/eLife.19760-4018965.svg)](https://doi.org/10.7554/eLife.19760)
 
 # ScreenProcessing
 
