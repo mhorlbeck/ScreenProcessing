@@ -141,11 +141,14 @@ def countsScatter(data, condition_x=None, replicate_x=None,
                          s=1.5, c=almost_black, label='all sgRNAs',
                          rasterized=True)
         else:
+            phenotype_scores = data['phenotypes'].loc[:, (colorByPhenotype_condition, colorByPhenotype_replicate)]
             result = axis.scatter(np.log2(data['counts'].loc[:, (condition_x, replicate_x)] + 1),
                                   np.log2(
                                       data['counts'].loc[:, (condition_y, replicate_y)] + 1),
-                                  s=1.5, c=data['phenotypes'].loc[:, (colorByPhenotype_condition, colorByPhenotype_replicate)],
+                                  s=1.5, c=phenotype_scores,
                                   cmap=yellow_blue, label='all sgRNAs',
+                                  vmin= -1*phenotype_scores.abs().max(),
+                                  vmax= phenotype_scores.abs().max(),
                                   rasterized=True)
 
             plt.colorbar(result)
